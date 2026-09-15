@@ -1,0 +1,8 @@
+# Uploaded files (potentially sensitive client documents, GST files, etc.)
+# must be served through an authenticated script (see leads/document-download.php),
+# not accessed directly — a random filename is not real access control.
+Require all denied
+Order deny,allow
+Deny from all
+
+Options -Indexes

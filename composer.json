@@ -1,0 +1,13 @@
+{
+    "name": "company/enterprise-crm-erp-corephp",
+    "description": "Enterprise CRM + ERP application (Core PHP, XAMPP-ready, no framework)",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.1",
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}

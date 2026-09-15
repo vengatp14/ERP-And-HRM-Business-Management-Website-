@@ -1,0 +1,39 @@
+# Enterprise CRM ERP — Core PHP Edition
+
+# Block direct access to dotfiles (.env, .git, etc.)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Block direct access to dependency/package metadata files.
+<FilesMatch "^(composer\.(json|lock)|package(-lock)?\.json)$">
+    Require all denied
+</FilesMatch>
+
+# Never show directory listings.
+Options -Indexes
+
+# Self-configure PHP's upload limits to match the app's intended 10MB
+# file size limit (see includes/uploads.php UPLOAD_MAX_BYTES). PHP's
+# own defaults (commonly 2MB upload_max_filesize / 8MB post_max_size)
+# are smaller than that, so without this, PHP silently rejects uploads
+# between its default and our intended limit — and worse, when
+# post_max_size is exceeded, PHP empties $_POST entirely (including the
+# CSRF token), producing a confusing "session expired" error instead of
+# a clear "file too large" one. mod_php (Apache's default PHP handler,
+# and XAMPP's default) honors php_value directives in .htaccess, so this
+# takes effect with zero manual configuration.
+<IfModule mod_php.c>
+    php_value upload_max_filesize 12M
+    php_value post_max_size 12M
+</IfModule>
+<IfModule mod_php8.c>
+    php_value upload_max_filesize 12M
+    php_value post_max_size 12M
+</IfModule>
+
+# Note: unlike an MVC/front-controller setup, this project needs no
+# rewrite rules. Each page (login.php, dashboard.php, ...) is its own
+# real file, so it works identically whether the project sits at the
+# web root or in an XAMPP subfolder (htdocs/project-name/) — no
+# absolute-vs-relative rewrite path issue to worry about.

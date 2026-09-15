@@ -1,0 +1,650 @@
+:root {
+    --app-sidebar-width: 260px;
+    --app-topbar-height: 60px;
+    --app-sidebar-bg: #111827;
+}
+
+/* ---------------------------------------------------------------
+   Flex-item overflow guard.
+   Flex items default to min-width:auto, so a long unbroken string
+   (an email address, a URL) inside a flex row won't shrink below
+   its own content width — it pushes the row, then the card, then
+   the whole page wider than the viewport, forcing horizontal
+   scroll on mobile. .min-w-0 (not part of Bootstrap's default
+   utility set) opts a flex child back into shrinking normally;
+   pair it with Bootstrap's .text-break on the text itself so long
+   values wrap instead of overflowing.
+   --------------------------------------------------------------- */
+.min-w-0 {
+    min-width: 0;
+}
+
+/* ---------------------------------------------------------------
+   Status toggle switch (used in Employees table etc.)
+   --------------------------------------------------------------- */
+.status-toggle {
+    display: inline-flex;
+    align-items: center;
+}
+
+.status-toggle .form-check-input {
+    width: 2.6em;
+    height: 1.4em;
+    cursor: pointer;
+    background-color: #dee2e6;
+    border-color: #dee2e6;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+}
+
+.status-toggle .form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.status-toggle .form-check-input:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+}
+
+body {
+    background-color: #f4f6f9;
+}
+
+/* Nothing on the page — table, card, dropdown, etc — should be able to
+   push the page itself wider than the viewport and make the whole
+   layout (including the fixed top/bottom nav) scrollable sideways. */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.app-shell {
+    min-height: 100vh;
+}
+
+/* ---------------------------------------------------------------
+   Sidebar
+   --------------------------------------------------------------- */
+.app-sidebar {
+    background-color: var(--app-sidebar-bg);
+    width: var(--app-sidebar-width);
+    height: 100vh;
+}
+
+/* Bootstrap's own .offcanvas-lg rule resets .offcanvas-body to
+   flex-grow:0 and overflow-y:visible once the sidebar becomes
+   static/always-visible at >=992px — which silently cancels the
+   scroll below. Force it back so .app-nav has a bounded height to
+   scroll within, same as the mobile drawer. */
+@media (min-width: 992px) {
+    .app-sidebar.offcanvas-lg {
+        display: flex;
+        flex-direction: column;
+    }
+    .app-sidebar.offcanvas-lg .offcanvas-body {
+        flex-grow: 1;
+        overflow-y: visible;
+        min-height: 0;
+    }
+}
+
+.app-logo {
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    padding: 1.1rem 1.25rem;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* Scrolls independently when the menu list is taller than the
+   viewport, so items near the bottom (Admin, Company Branding) are
+   always reachable instead of being clipped off-screen.
+   flex-wrap: nowrap overrides Bootstrap's .nav default of wrap —
+   without it, a bounded-height flex-column container wraps overflow
+   into a second column instead of scrolling. */
+.app-nav {
+    padding: 0.5rem 0.75rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    min-height: 0;
+    scrollbar-width: none;       /* Firefox */
+    -ms-overflow-style: none;    /* old Edge/IE */
+}
+
+.app-nav::-webkit-scrollbar {
+    display: none;               /* Chrome, Safari, Edge (Chromium) */
+}
+
+.app-nav .nav-link {
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.15rem;
+    font-size: 0.925rem;
+}
+
+.app-nav .nav-link i {
+    font-size: 1.05rem;
+    width: 1.2rem;
+    text-align: center;
+}
+
+.app-nav .nav-link:hover:not(.disabled) {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.app-nav .nav-link.active {
+    background-color: #2563eb;
+    color: #fff;
+}
+
+.app-nav .nav-link.disabled {
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------
+   Main column (topbar + content) — pushed right of the fixed
+   sidebar on large screens; full-width with an offcanvas sidebar
+   on small screens.
+   --------------------------------------------------------------- */
+.app-main {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-topbar {
+    height: var(--app-topbar-height);
+    background-color: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1030;
+}
+
+/* On large screens the sidebar is fixed and permanent (see the
+   min-width:992px block below), so the topbar — also fixed, so it
+   truly stays put on scroll instead of relying on `sticky` — needs to
+   start after it instead of spanning the full viewport width. */
+@media (min-width: 992px) {
+    .app-topbar {
+        left: var(--app-sidebar-width);
+        width: calc(100% - var(--app-sidebar-width));
+    }
+}
+
+.app-menu-toggle {
+    border: none;
+    padding: 0.25rem 0.5rem;
+}
+
+.app-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #2563eb;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Notification bell's unread-count badge (top navbar) — the badge sits
+   at the button's top-right corner via translate-middle, which pokes
+   it up above the button and visually touches/crowds the top edge of
+   the screen. Nudge the button down slightly and pull the badge in a
+   touch so it stays clear of the top edge, at every screen size. */
+.notif-bell-btn {
+    margin-top: 4px;
+}
+
+.notif-bell-badge {
+    top: 4px !important;
+}
+
+.app-content {
+    padding: 1rem;
+    padding-top: calc(var(--app-topbar-height) + 1rem);
+    flex: 1;
+}
+
+/* KPI cards used on the dashboard and future modules */
+.stat-card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.stat-card .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 0.65rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
+/* ---------------------------------------------------------------
+   Large screens: sidebar is fixed/permanent, offcanvas behavior
+   disabled (Bootstrap's offcanvas-lg handles showing it inline
+   automatically; this just fine-tunes width/scroll behavior).
+   --------------------------------------------------------------- */
+@media (min-width: 992px) {
+    .app-sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        background-color: var(--app-sidebar-bg) !important;
+    }
+
+    .app-main {
+        margin-left: var(--app-sidebar-width);
+    }
+}
+
+/* ---------------------------------------------------------------
+   Small screens: tighten content padding, shrink stat card icon
+   so four KPI cards remain legible when stacked to 1-2 columns.
+   app-topbar is already `fixed` at every width (see the base rule
+   above), so no small-screen-only positioning is needed here.
+   --------------------------------------------------------------- */
+
+@media (max-width: 575.98px) {
+    .app-content {
+        padding: 0.75rem;
+        padding-top: calc(var(--app-topbar-height) + 0.75rem);
+    }
+
+    .stat-card .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+}
+
+/* Table wrapper never causes horizontal page scroll — DataTables'
+   own responsive extension handles column collapsing, but this is
+   a safety net for any table used before that JS initializes. */
+.table-responsive {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Click-and-drag horizontal scrolling for any wide table (Employees,
+   Leads, etc.) — see the .js-drag-scroll handler in app.js. Only takes
+   effect once JS confirms the table actually overflows. */
+.table-responsive.is-drag-scrollable {
+    cursor: grab;
+}
+
+.table-responsive.is-drag-scrolling {
+    cursor: grabbing;
+    user-select: none;
+}
+
+/* DataTables computes its own inline width on init and, with narrow
+   tables (e.g. the 3-column login history table), that width can end
+   up smaller than the card — leaving empty space on the right. Force
+   it back to fill the card. */
+table.dataTable {
+    width: 100% !important;
+}
+
+
+/* bottom nav */
+.mobile-bottom-nav{
+    display:none;
+}
+
+.app-topbar .dropdown-menu {
+    z-index: 1040;
+}
+
+/* Profile dropdown ("Signed in as ..." / Profile / Logout) — Bootstrap's
+   default dropdown-menu min-width (10rem / 160px) is wider than the
+   Profile/Logout items need, which reads as extra empty space on the
+   right of the short items. Shrinking min-width lets the menu hug the
+   item width instead; the "Signed in as ..." line just wraps to fit. */
+.user-menu-dropdown {
+    min-width: 8rem;
+}
+
+/* Notification dropdown — fixed 320px overflowed narrow phone
+   screens; min(320px, 92vw) keeps it on-screen. */
+.notif-dropdown {
+    width: min(320px, 92vw);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+@media (max-width: 991.98px) {
+    /* data-bs-display="static" on the bell button stops Popper from
+       positioning this dynamically — pin it under the topbar with
+       plain CSS so it can't drift to the side on narrow screens.
+       Selector is deliberately ".notif-dropdown.dropdown-menu-end"
+       (not just ".notif-dropdown") to match Bootstrap's own
+       ".dropdown-menu.dropdown-menu-end{ right:0; left:auto; }" rule
+       specificity-for-specificity — otherwise Bootstrap's rule wins
+       regardless of source order and right/left below are ignored,
+       which can push the panel off-screen on narrow phones. */
+    .notif-dropdown.dropdown-menu-end {
+        position: fixed;
+        top: var(--app-topbar-height);
+        right: 8px;
+        left: 8px;
+        width: auto;
+        margin: 0;
+    }
+}
+
+@media (max-width:991.98px){
+
+.mobile-bottom-nav{
+    position:fixed;
+    bottom:0;
+    left:0;
+    width:100%;
+    height:72px;
+
+    display:flex;
+    align-items:center;
+
+    overflow-x:auto;
+    overflow-y:hidden;
+
+    background:#fff;
+    border-top:1px solid #ddd;
+
+    z-index:1030;
+
+    -webkit-overflow-scrolling:touch;
+}
+
+.mobile-bottom-nav::-webkit-scrollbar{
+    height:4px;
+}
+
+.mobile-bottom-nav::-webkit-scrollbar-thumb{
+    background:#bbb;
+    border-radius:20px;
+}
+
+.mobile-bottom-nav a{
+
+    flex:0 0 auto;
+    width:85px;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    text-decoration:none;
+
+    color:#6c757d;
+
+    padding:8px;
+}
+
+.mobile-bottom-nav a i{
+
+    font-size:20px;
+    margin-bottom:4px;
+
+}
+
+.mobile-bottom-nav a span{
+
+    font-size:11px;
+    white-space:nowrap;
+
+}
+
+.mobile-bottom-nav a.active{
+
+    color:#0d6efd;
+
+}
+
+body{
+
+    padding-bottom:80px;
+
+}
+
+}
+
+/* ---------------------------------------------------------------
+   Quick contact actions (Call / WhatsApp) — round icon buttons used
+   in the leads table "Contact" column.
+   --------------------------------------------------------------- */
+.contact-actions {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.contact-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 15px;
+    text-decoration: none;
+    transition: opacity 0.15s ease;
+}
+
+.contact-action-btn:hover {
+    opacity: 0.85;
+    color: #fff;
+}
+
+.contact-action-btn.call {
+    background-color: #22c55e;
+}
+
+.contact-action-btn.whatsapp {
+    background-color: #25d366;
+}
+
+.contact-action-btn.disabled {
+    background-color: #ced4da;
+    pointer-events: none;
+}
+
+/* Follow-up date — overdue vs due-today highlighting. No background
+   pill (plain white row) — bold red text + the warning/bell icon next
+   to it is enough to catch the eye without a colored box. */
+.followup-overdue {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.followup-today {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Whole row tint for leads currently in "Missed" status, so a missed
+   follow-up is obvious at a glance in the list without opening the row. */
+tr.lead-row-missed {
+    background-color: #fdecea !important;
+}
+
+tr.lead-row-missed:hover {
+    background-color: #fbd9d5 !important;
+}
+
+tr.lead-row-missed td {
+    color: #842029;
+}
+
+/* Leads list header row (leads/index.php) — browsers bold <th> by
+   default; the user asked for the plain/non-bold look here
+   specifically, so it's scoped to .leads-table rather than every
+   table's header app-wide. Headers (e.g. "Assigned To", "Priority /
+   Status") were also wrapping onto two lines on narrow/mobile screens,
+   making that column's row taller than the rest and pushing its text
+   up — .table-responsive already lets the whole table scroll
+   horizontally, so keep every header on one line and let the extra
+   width scroll into view instead of wrapping. */
+.leads-table thead th {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Deadline / Follow-up column (leads/index.php) — the deadline date
+   plus the follow-up datetime + icon were getting squeezed onto
+   awkward wrapped lines on mobile. .table-responsive already lets the
+   whole table scroll horizontally on small screens, so it's safe to
+   give this column enough breathing room instead of letting it
+   compress; the extra width just scrolls into view rather than
+   squashing everything else. */
+.leads-deadline-col {
+    min-width: 190px;
+    white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+    .leads-deadline-col {
+        min-width: 210px;
+    }
+}
+
+/* Attendance monthly summary table (hr/attendance.php) — headers like
+   "Days in Month" were wrapping onto 3 lines on narrow/mobile screens.
+   .table-responsive already lets the whole table scroll horizontally,
+   so keep every header to at most 2 lines and let the extra width
+   scroll into view instead of wrapping further. */
+.attendance-summary-table thead th {
+    white-space: normal;
+    min-width: 6.5rem;
+}
+
+/* Priority / Status column (leads/index.php) — the "Priority / Status"
+   header text was wrapping onto two lines, and on mobile the two
+   badges in the body cell were stacking onto separate lines too.
+   .table-responsive already lets the whole table scroll horizontally,
+   so keep both the header and the badges on a single line and let
+   the extra width scroll into view instead of wrapping. */
+.leads-priority-status-col {
+    white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------
+   Shared calendar widget (Leads, Clients, Projects, Billing,
+   Meetings — see includes/calendar.php)
+   --------------------------------------------------------------- */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    padding: 2px 0;
+}
+
+.calendar-cell {
+    min-height: 60px;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 8px 4px;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.calendar-cell-blank {
+    background-color: transparent;
+    border: none;
+}
+
+.calendar-cell-today {
+    border-color: #0d6efd;
+    box-shadow: inset 0 0 0 1px #0d6efd;
+}
+
+.calendar-date {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #495057;
+    margin-bottom: 0;
+    text-align: center;
+}
+
+.calendar-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px;
+}
+
+.calendar-chip {
+    border: none;
+    cursor: pointer;
+    font-size: 0.55rem;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 999px;
+}
+
+.calendar-chip-more {
+    font-size: 0.55rem;
+    color: #6c757d;
+    align-self: center;
+}
+
+.calendar-legend .badge {
+    padding: 0.25em 0.4em;
+    font-size: 0.65rem;
+}
+
+.calendar-legend {
+    font-size: 0.7rem;
+}
+
+/* Card header stays compact; the calendar body itself is a Bootstrap
+   .collapse (see includes/calendar.php) that starts closed so the
+   widget takes up minimal space until the user opens it. */
+.calendar-widget .card-header {
+    padding: 0.5rem 0.75rem;
+}
+
+.calendar-toggle-icon {
+    transition: transform 0.15s ease;
+}
+
+.calendar-widget [aria-expanded="true"] .calendar-toggle-icon {
+    transform: rotate(180deg);
+}
+
+@media (max-width: 576px) {
+    .calendar-cell { min-height: 48px; padding: 5px 3px; gap: 2px; }
+    .calendar-weekday { font-size: 0.55rem; }
+    .calendar-date { font-size: 0.8rem; }
+    .calendar-chip { font-size: 0.5rem; padding: 1px 3px; }
+}

@@ -1,0 +1,24 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /includes/
+Disallow: /database/
+Disallow: /api/
+Disallow: /accounts/
+Disallow: /billing/
+Disallow: /clients/
+Disallow: /employees/
+Disallow: /hr/
+Disallow: /leads/
+Disallow: /projects/
+Disallow: /reports/
+Disallow: /notifications/
+Disallow: /login.php
+Disallow: /login-otp.php
+Disallow: /register.php
+Disallow: /reset-password.php
+Disallow: /forgot-password.php
+Disallow: /dashboard.php
+Disallow: /profile.php
+Allow: /assets/
+
+Sitemap: https://yourdomain.com/sitemap.xml

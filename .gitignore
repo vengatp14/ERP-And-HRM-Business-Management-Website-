@@ -1,0 +1,22 @@
+# Environment & secrets
+.env
+
+# Dependencies (only present if PHPMailer via Composer is added)
+/vendor/
+
+# Runtime-generated / local-only
+/logs/*.log
+/cache/ratelimit_*.txt
+/uploads/images/*
+/uploads/documents/*
+/uploads/temp/*
+!/uploads/images/.gitkeep
+!/uploads/documents/.gitkeep
+!/uploads/temp/.gitkeep
+/database/*.sqlite
+
+# OS/editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,4 @@
+# Deny all direct web access — these are internal application files only.
+Require all denied
+Order deny,allow
+Deny from all
