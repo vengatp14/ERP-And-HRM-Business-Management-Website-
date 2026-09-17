@@ -39,7 +39,11 @@ function apply_secure_headers(): void
     header('X-Content-Type-Options: nosniff');
     header('X-Frame-Options: DENY');
     header('Referrer-Policy: strict-origin-when-cross-origin');
-    header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+    // geolocation=(self) — same-origin only — so hr/attendance.php can
+    // capture the device's real coordinates at punch-in/out (see
+    // punch_in()/punch_out() in includes/hr.php). Microphone/camera stay
+    // fully denied; nothing in this app uses them.
+    header('Permissions-Policy: geolocation=(self), microphone=(), camera=()');
     header("Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; script-src 'self' 'nonce-" . csp_nonce() . "' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net");
     // No-store on every authenticated page: without this, hitting the
     // browser Back button after creating/editing/deleting a record (e.g.

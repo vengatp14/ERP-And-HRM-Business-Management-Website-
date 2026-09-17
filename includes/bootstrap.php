@@ -28,6 +28,7 @@ require_once __DIR__ . '/company_branding.php';
 require_once __DIR__ . '/employees.php';
 require_once __DIR__ . '/projects.php';
 require_once __DIR__ . '/billing.php';
+require_once __DIR__ . '/quotations.php';
 require_once __DIR__ . '/accounts.php';
 require_once __DIR__ . '/project_payments.php';
 require_once __DIR__ . '/reports.php';

@@ -5,6 +5,38 @@
  * modules are built.
  */
 document.addEventListener('DOMContentLoaded', function () {
+    // Light/Dark theme toggle — data-bs-theme is already applied as early
+    // as possible by the inline script in includes/header.php (to avoid a
+    // flash of the wrong theme); this just wires up the visible switch and
+    // keeps the choice in localStorage so it persists across pages/sessions.
+    // Light Theme remains the default: nothing is written to storage until
+    // the user actually switches.
+    var THEME_KEY = 'crmerp_theme';
+    var themeToggleBtn = document.getElementById('themeToggleBtn');
+    function applyThemeButtonState(theme) {
+        if (!themeToggleBtn) return;
+        var icon = themeToggleBtn.querySelector('i');
+        var isDark = theme === 'dark';
+        if (icon) {
+            icon.classList.toggle('bi-moon-stars', !isDark);
+            icon.classList.toggle('bi-sun', isDark);
+        }
+        var label = isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme';
+        themeToggleBtn.setAttribute('title', label);
+        themeToggleBtn.setAttribute('aria-label', label);
+    }
+    var currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
+    applyThemeButtonState(currentTheme);
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', function () {
+            var next = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', next);
+            applyThemeButtonState(next);
+            try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* ignore */ }
+            document.dispatchEvent(new CustomEvent('crmerp:theme-changed', { detail: { theme: next } }));
+        });
+    }
+
     // Auto-dismiss flash alerts after 6 seconds so they don't linger on
     // small screens and crowd out the form below them.
     document.querySelectorAll('.alert').forEach(function (alert) {

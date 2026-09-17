@@ -125,6 +125,15 @@ $companyLogoUrl = company_branding_url('logo');
 $companySealUrl = company_branding_url('seal');
 $companySignatureUrl = company_branding_url('signature');
 
+// Payment Details section (req: QR codes + bank account details on
+// every final bill) — pulled live from Admin > Company Branding so a
+// change there applies to every future bill without editing invoices.
+// Nothing prints if nothing has been configured (see
+// company_has_payment_details()).
+$paymentQrs = list_company_payment_qrs();
+$bankDetails = company_bank_details();
+$showPaymentDetails = company_has_payment_details();
+
 // Client's own logo/seal/signature — uploaded on their client record
 // (Clients > Edit > Invoice Branding). Falls back to nothing (not our
 // defaults) when the client hasn't uploaded one, so we never show our
@@ -287,11 +296,70 @@ require __DIR__ . '/../includes/navbar.php';
             </div>
         </div>
 
+        <?php if ($showPaymentDetails): ?>
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="border rounded p-3" id="paymentDetailsSection">
+                        <div class="text-uppercase small fw-semibold text-muted mb-3">Payment Details</div>
+                        <div class="row g-4">
+                            <?php if (!empty($paymentQrs)): ?>
+                                <div class="col-12 col-md-6">
+                                    <div class="d-flex flex-wrap gap-4">
+                                        <?php foreach ($paymentQrs as $qr): ?>
+                                            <div class="text-center">
+                                                <img src="<?= e(url('admin/company-payment-qr-download.php?id=' . $qr['id'])) ?>"
+                                                     alt="<?= e($qr['method_label']) ?> payment QR"
+                                                     style="height:130px;width:130px;object-fit:contain;" class="border rounded p-1 bg-white">
+                                                <div class="small text-muted mt-1"><?= e($qr['method_label']) ?></div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (!empty($bankDetails)): ?>
+                                <div class="col-12 col-md-6">
+                                    <div class="small fw-semibold mb-1">Bank Details</div>
+                                    <table class="table table-sm table-borderless mb-0" style="max-width:360px;">
+                                        <?php foreach ($bankDetails as $field): ?>
+                                            <tr>
+                                                <td class="text-muted py-1 pe-2" style="width:45%;"><?= e($field['label']) ?></td>
+                                                <td class="py-1"><?= e($field['value']) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </table>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+
         <?php if (!empty($invoice['notes'])): ?>
             <div class="mt-3"><div class="text-muted small">Notes</div><?= nl2br(e($invoice['notes'])) ?></div>
         <?php endif; ?>
         <?php if (!empty($invoice['terms'])): ?>
             <div class="mt-3"><div class="text-muted small">Terms &amp; Conditions</div><?= nl2br(e($invoice['terms'])) ?></div>
+        <?php endif; ?>
+
+        <?php $companySocialLinks = company_social_links(); ?>
+        <?php if (!empty($companySocialLinks)): ?>
+            <!--
+                Profile name only (never a raw URL) so the printed copy stays
+                clean and short — see req #14. On the web/soft-copy view the
+                name is a real hyperlink to the configured URL (req #15);
+                Chrome/Edge's "Save as PDF" preserves that as a clickable
+                link in the exported PDF too.
+            -->
+            <div class="mt-3 d-flex flex-wrap gap-3 small">
+                <?php foreach ($companySocialLinks as $platformKey => $link): ?>
+                    <a href="<?= e($link['url']) ?>" target="_blank" rel="noopener" class="text-decoration-none">
+                        <i class="bi <?= e(COMPANY_SOCIAL_PLATFORMS[$platformKey]['icon']) ?>"></i>
+                        <?= e(COMPANY_SOCIAL_PLATFORMS[$platformKey]['label']) ?>:
+                        <?= e($link['name']) ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
         <?php endif; ?>
 
         <div class="row mt-5">
@@ -380,6 +448,7 @@ require __DIR__ . '/../includes/navbar.php';
 @media print {
     .no-print, .app-sidebar, .app-navbar, nav, .btn { display: none !important; }
     .app-content { margin: 0 !important; padding: 0 !important; }
+    #paymentDetailsSection { page-break-inside: avoid; }
 }
 </style>
 

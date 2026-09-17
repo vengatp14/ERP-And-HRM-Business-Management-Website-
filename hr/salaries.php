@@ -12,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify_or_die();
 
     $data = [
+        'id' => (int) ($_POST['salary_id'] ?? 0),
         'user_id' => (int) ($_POST['user_id'] ?? 0),
         'pay_month' => $_POST['pay_month'] ?? date('Y-m'),
         'basic_pay' => (float) ($_POST['basic_pay'] ?? 0),
@@ -27,14 +28,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('hr/salaries.php');
     }
 
-    save_salary_record($data, $currentUserId);
-    flash_set('status', 'Salary record saved.');
+    $savedId = save_salary_record($data, $currentUserId);
+    audit_log($currentUserId, 'employees', $data['id'] > 0 ? 'salary_updated' : 'salary_created',
+        ($data['id'] > 0 ? "Updated" : "Created") . " salary record #{$savedId} for user #{$data['user_id']} ({$data['pay_month']}).");
+    flash_set('status', $data['id'] > 0 ? 'Salary record updated. The payslip download now reflects the corrected figures.' : 'Salary record saved.');
     redirect('hr/salaries.php?month=' . $data['pay_month']);
 }
 
 $viewMonth = $_GET['month'] ?? date('Y-m');
 $records = get_salary_records($viewMonth);
 $employees = db()->query("SELECT id, full_name FROM users WHERE status = 'active' ORDER BY full_name")->fetchAll();
+
+// Edit flow — ?edit=<salary_id> pre-fills the Record/Update Salary form
+// below with the existing values (see save_salary_record() in
+// includes/hr.php, which UPDATEs in place when a salary_id is posted
+// instead of inserting a duplicate).
+$editId = isset($_GET['edit']) ? (int) $_GET['edit'] : 0;
+$editRecord = $editId > 0 ? find_salary_record($editId) : false;
+if ($editId > 0 && $editRecord === false) {
+    flash_set('error', 'Salary record not found.');
+    redirect('hr/salaries.php?month=' . $viewMonth);
+}
 
 // Attendance-based calculator: pick an employee + month to see that
 // month's attendance % and the suggested pay it works out to.
@@ -164,40 +178,53 @@ require __DIR__ . '/../includes/navbar.php';
 <div class="row g-4">
     <div class="col-12 col-lg-5">
         <div class="card">
-            <div class="card-header bg-white"><h2 class="h6 mb-0">Record / Update Salary</h2></div>
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h2 class="h6 mb-0"><?= $editRecord ? 'Edit Salary — ' . e($editRecord['full_name']) : 'Record / Update Salary' ?></h2>
+                <?php if ($editRecord): ?>
+                    <a href="<?= e(url('hr/salaries.php?month=' . $viewMonth)) ?>" class="small text-decoration-none">Cancel edit</a>
+                <?php endif; ?>
+            </div>
             <div class="card-body">
+                <?php if ($editRecord): ?>
+                    <div class="alert alert-info small py-2">
+                        Editing salary record #<?= e((string) $editRecord['id']) ?>. Saving will correct this record in place —
+                        the <a href="<?= e(url('hr/payslip.php?id=' . $editRecord['id'])) ?>" target="_blank" class="alert-link">payslip download</a>
+                        will reflect the updated figures immediately.
+                    </div>
+                <?php endif; ?>
                 <form method="POST" action="<?= e(url('hr/salaries.php')) ?>" novalidate>
                     <?= csrf_field() ?>
+                    <input type="hidden" name="salary_id" value="<?= e((string) ($editRecord['id'] ?? 0)) ?>">
                     <div class="mb-2">
                         <label class="form-label small">Employee *</label>
                         <select name="user_id" id="salaryFormUserId" class="form-select form-select-sm" required>
                             <option value="">Select…</option>
                             <?php foreach ($employees as $emp): ?>
-                                <option value="<?= e((string) $emp['id']) ?>"><?= e($emp['full_name']) ?></option>
+                                <option value="<?= e((string) $emp['id']) ?>" <?= $editRecord && (int) $editRecord['user_id'] === (int) $emp['id'] ? 'selected' : '' ?>><?= e($emp['full_name']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="mb-2">
                         <label class="form-label small">Pay Month *</label>
-                        <input type="month" name="pay_month" id="salaryFormPayMonth" class="form-control form-control-sm" value="<?= e($viewMonth) ?>" required>
+                        <input type="month" name="pay_month" id="salaryFormPayMonth" class="form-control form-control-sm" value="<?= e($editRecord['pay_month'] ?? $viewMonth) ?>" required>
                     </div>
                     <div class="row g-2 mb-2">
-                        <div class="col-4"><label class="form-label small">Basic (₹)</label><input type="number" step="0.01" name="basic_pay" id="salaryFormBasicPay" class="form-control form-control-sm"></div>
-                        <div class="col-4"><label class="form-label small">Allowances</label><input type="number" step="0.01" name="allowances" class="form-control form-control-sm"></div>
-                        <div class="col-4"><label class="form-label small">Deductions</label><input type="number" step="0.01" name="deductions" class="form-control form-control-sm"></div>
+                        <div class="col-4"><label class="form-label small">Basic (₹)</label><input type="number" step="0.01" name="basic_pay" id="salaryFormBasicPay" class="form-control form-control-sm" value="<?= e((string) ($editRecord['basic_pay'] ?? '')) ?>"></div>
+                        <div class="col-4"><label class="form-label small">Allowances</label><input type="number" step="0.01" name="allowances" class="form-control form-control-sm" value="<?= e((string) ($editRecord['allowances'] ?? '')) ?>"></div>
+                        <div class="col-4"><label class="form-label small">Deductions</label><input type="number" step="0.01" name="deductions" class="form-control form-control-sm" value="<?= e((string) ($editRecord['deductions'] ?? '')) ?>"></div>
                     </div>
                     <div class="form-text mb-2">Tip: use the "Calculate from Attendance" panel above to auto-fill Basic from that month's attendance %.</div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="form-label small">Status</label>
                             <select name="status" class="form-select form-select-sm">
-                                <option value="pending">Pending</option>
-                                <option value="paid">Paid</option>
+                                <option value="pending" <?= ($editRecord['status'] ?? '') === 'pending' ? 'selected' : '' ?>>Pending</option>
+                                <option value="paid" <?= ($editRecord['status'] ?? '') === 'paid' ? 'selected' : '' ?>>Paid</option>
                             </select>
                         </div>
-                        <div class="col-6"><label class="form-label small">Paid On</label><input type="date" name="paid_on" class="form-control form-control-sm"></div>
+                        <div class="col-6"><label class="form-label small">Paid On</label><input type="date" name="paid_on" class="form-control form-control-sm" value="<?= e((string) ($editRecord['paid_on'] ?? '')) ?>"></div>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-sm w-100">Save</button>
+                    <button type="submit" class="btn btn-primary btn-sm w-100"><?= $editRecord ? 'Save Corrections' : 'Save' ?></button>
                 </form>
             </div>
         </div>
@@ -214,10 +241,10 @@ require __DIR__ . '/../includes/navbar.php';
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-sm table-striped mb-0">
-                        <thead><tr><th>Employee</th><th class="text-end">Basic</th><th class="text-end">Net Pay</th><th>Status</th></tr></thead>
+                        <thead><tr><th>Employee</th><th class="text-end">Basic</th><th class="text-end">Net Pay</th><th>Status</th><th class="text-end">Action</th></tr></thead>
                         <tbody>
                             <?php if (empty($records)): ?>
-                                <tr><td colspan="4" class="text-center text-muted py-3">No salary records for this month.</td></tr>
+                                <tr><td colspan="5" class="text-center text-muted py-3">No salary records for this month.</td></tr>
                             <?php endif; ?>
                             <?php foreach ($records as $rec): ?>
                                 <tr>
@@ -225,6 +252,14 @@ require __DIR__ . '/../includes/navbar.php';
                                     <td class="text-end">₹<?= e(number_format((float) $rec['basic_pay'], 2)) ?></td>
                                     <td class="text-end">₹<?= e(number_format((float) $rec['net_pay'], 2)) ?></td>
                                     <td><span class="badge <?= $rec['status'] === 'paid' ? 'text-bg-success' : 'text-bg-warning' ?>"><?= e(ucfirst($rec['status'])) ?></span></td>
+                                    <td class="text-end">
+                                        <div class="d-inline-flex gap-1">
+                                            <a href="<?= e(url('hr/salaries.php?month=' . $viewMonth . '&edit=' . $rec['id'])) ?>"
+                                               class="btn btn-sm btn-outline-secondary" title="Edit"><i class="bi bi-pencil"></i></a>
+                                            <a href="<?= e(url('hr/payslip.php?id=' . $rec['id'])) ?>" target="_blank"
+                                               class="btn btn-sm btn-outline-primary" title="Download"><i class="bi bi-download"></i></a>
+                                        </div>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

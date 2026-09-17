@@ -12,33 +12,47 @@ declare(strict_types=1);
 // Attendance
 // ---------------------------------------------------------------------
 
-function punch_in(int $userId): bool
+function punch_in(int $userId, ?float $latitude = null, ?float $longitude = null): bool
 {
     $today = date('Y-m-d');
     $now = date('Y-m-d H:i:s');
 
     $stmt = db()->prepare(
         'INSERT INTO employee_attendance
-        (user_id, attendance_date, check_in_time, status, created_at, updated_at)
-        VALUES (:uid, :date, :time, "present", :created, :updated)'
+        (user_id, attendance_date, check_in_time, check_in_latitude, check_in_longitude, status, created_at, updated_at)
+        VALUES (:uid, :date, :time, :lat, :lng, "present", :created, :updated)'
     );
 
     return $stmt->execute([
         'uid'     => $userId,
         'date'    => $today,
         'time'    => date('H:i:s'),
+        // Only ever the device's own coordinates from the browser
+        // Geolocation API (see the punch-in form on hr/attendance.php)
+        // — never a fixed/fallback location. If the browser couldn't
+        // get a location (denied permission, unsupported, timed out),
+        // these are simply null; the punch itself still succeeds.
+        'lat'     => $latitude,
+        'lng'     => $longitude,
         'created' => $now,
         'updated' => $now,
     ]);
 }
 
-function punch_out(int $userId): bool
+function punch_out(int $userId, ?float $latitude = null, ?float $longitude = null): bool
 {
     $stmt = db()->prepare(
-        'UPDATE employee_attendance SET check_out_time = :time, updated_at = :now
+        'UPDATE employee_attendance SET check_out_time = :time, check_out_latitude = :lat, check_out_longitude = :lng, updated_at = :now
          WHERE user_id = :uid AND attendance_date = :date'
     );
-    return $stmt->execute(['time' => date('H:i:s'), 'now' => date('Y-m-d H:i:s'), 'uid' => $userId, 'date' => date('Y-m-d')]);
+    return $stmt->execute([
+        'time' => date('H:i:s'),
+        'lat' => $latitude,
+        'lng' => $longitude,
+        'now' => date('Y-m-d H:i:s'),
+        'uid' => $userId,
+        'date' => date('Y-m-d'),
+    ]);
 }
 
 function todays_attendance(int $userId): array|false
@@ -68,7 +82,8 @@ function mark_attendance(int $userId, string $date, string $status, ?string $not
 function attendance_for_date(string $date): array
 {
     $stmt = db()->prepare(
-        "SELECT u.id AS user_id, u.full_name, a.attendance_date, a.status, a.check_in_time, a.check_out_time
+        "SELECT u.id AS user_id, u.full_name, a.attendance_date, a.status, a.check_in_time, a.check_out_time,
+                a.check_in_latitude, a.check_in_longitude, a.check_out_latitude, a.check_out_longitude
          FROM users u
          LEFT JOIN employee_attendance a ON a.user_id = u.id AND a.attendance_date = :date
          WHERE u.status = 'active' AND u.deleted_at IS NULL
@@ -85,6 +100,12 @@ function attendance_history(int $userId, string $startDate, string $endDate): ar
     );
     $stmt->execute(['uid' => $userId, 'start' => $startDate, 'end' => $endDate]);
     return $stmt->fetchAll();
+}
+
+/** Google Maps link for a punch's captured coordinates — used by the "View Location" action on hr/attendance.php's Team Roster. */
+function attendance_location_maps_url(float $latitude, float $longitude): string
+{
+    return 'https://www.google.com/maps?q=' . urlencode((string) $latitude) . ',' . urlencode((string) $longitude);
 }
 
 function attendance_status_badge_class(?string $status): string
@@ -259,33 +280,81 @@ function leave_status_badge_class(string $status): string
 // Salary
 // ---------------------------------------------------------------------
 
+/**
+ * Creates a new salary record, or — when $data['id'] is set (the Edit
+ * flow on hr/salaries.php, see find_salary_record() below) — updates
+ * the existing one in place instead of inserting a duplicate. Editing
+ * this way means the corrected figures are what every future
+ * "Download" (hr/payslip.php) renders — the payslip is always
+ * generated fresh from this row, never a separately stored file, so
+ * there's no separate "regenerate" step.
+ */
 function save_salary_record(array $data, int $createdBy): int
 {
     $netPay = (float) $data['basic_pay'] + (float) $data['allowances'] - (float) $data['deductions'];
+    $recordId = (int) ($data['id'] ?? 0);
+
+    if ($recordId > 0) {
+        $stmt = db()->prepare(
+            'UPDATE employee_salaries
+             SET user_id = :uid, pay_month = :month, basic_pay = :basic, allowances = :allow,
+                 deductions = :deduct, net_pay = :net, status = :status, paid_on = :paid_on,
+                 notes = :notes, updated_at = :updated_at
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            'uid' => $data['user_id'],
+            'month' => $data['pay_month'],
+            'basic' => $data['basic_pay'],
+            'allow' => $data['allowances'],
+            'deduct' => $data['deductions'],
+            'net' => $netPay,
+            'status' => $data['status'] ?? 'pending',
+            'paid_on' => !empty($data['paid_on']) ? $data['paid_on'] : null,
+            'notes' => $data['notes'],
+            'updated_at' => date('Y-m-d H:i:s'),
+            'id' => $recordId,
+        ]);
+
+        return $recordId;
+    }
 
     $stmt = db()->prepare(
-    'INSERT INTO employee_salaries
-    (user_id, pay_month, basic_pay, allowances, deductions, net_pay, status, paid_on, notes, created_by, created_at, updated_at)
-    VALUES
-    (:uid, :month, :basic, :allow, :deduct, :net, :status, :paid_on, :notes, :created_by, :created_at, :updated_at)'
-);
+        'INSERT INTO employee_salaries
+        (user_id, pay_month, basic_pay, allowances, deductions, net_pay, status, paid_on, notes, created_by, created_at, updated_at)
+        VALUES
+        (:uid, :month, :basic, :allow, :deduct, :net, :status, :paid_on, :notes, :created_by, :created_at, :updated_at)'
+    );
 
-$stmt->execute([
-    'uid' => $data['user_id'],
-    'month' => $data['pay_month'],
-    'basic' => $data['basic_pay'],
-    'allow' => $data['allowances'],
-    'deduct' => $data['deductions'],
-    'net' => $netPay,
-    'status' => $data['status'] ?? 'pending',
-    'paid_on' => !empty($data['paid_on']) ? $data['paid_on'] : null,
-    'notes' => $data['notes'],
-    'created_by' => $createdBy,
-    'created_at' => date('Y-m-d H:i:s'),
-    'updated_at' => date('Y-m-d H:i:s'),
-]);
+    $stmt->execute([
+        'uid' => $data['user_id'],
+        'month' => $data['pay_month'],
+        'basic' => $data['basic_pay'],
+        'allow' => $data['allowances'],
+        'deduct' => $data['deductions'],
+        'net' => $netPay,
+        'status' => $data['status'] ?? 'pending',
+        'paid_on' => !empty($data['paid_on']) ? $data['paid_on'] : null,
+        'notes' => $data['notes'],
+        'created_by' => $createdBy,
+        'created_at' => date('Y-m-d H:i:s'),
+        'updated_at' => date('Y-m-d H:i:s'),
+    ]);
 
     return (int) db()->lastInsertId();
+}
+
+/** Single salary record by id, with the employee's name/designation/department — used by the Edit form and hr/payslip.php. */
+function find_salary_record(int $id): array|false
+{
+    $stmt = db()->prepare(
+        'SELECT es.*, u.full_name, u.designation, u.department
+         FROM employee_salaries es
+         JOIN users u ON u.id = es.user_id
+         WHERE es.id = :id'
+    );
+    $stmt->execute(['id' => $id]);
+    return $stmt->fetch();
 }
 
 function get_salary_records(?string $payMonth = null, ?int $userId = null): array

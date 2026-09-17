@@ -69,6 +69,27 @@ function find_certificate(int $id): array|false
 }
 
 /**
+ * Updates an existing certificate's reference label/details in place
+ * (the Edit flow on hr/certificates.php) rather than issuing a new
+ * row. Since render_certificate_body()/hr/certificate-download.php
+ * always render from this row's current `details`, saving here is all
+ * that's needed for the next Download to be the regenerated,
+ * corrected certificate.
+ */
+function update_certificate(int $id, ?string $referenceLabel, array $details): bool
+{
+    $stmt = db()->prepare(
+        'UPDATE employee_certificates SET reference_label = :ref, details = :details WHERE id = :id'
+    );
+
+    return $stmt->execute([
+        'ref' => $referenceLabel,
+        'details' => json_encode($details, JSON_THROW_ON_ERROR),
+        'id' => $id,
+    ]);
+}
+
+/**
  * Renders the body markup (no <html>/<head>) for a certificate, ready
  * to drop into the print-styled wrapper in hr/certificate-download.php.
  */

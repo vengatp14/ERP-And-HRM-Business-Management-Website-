@@ -15,6 +15,7 @@ $menuItems = [
     ['key' => 'projects', 'label' => 'Projects', 'icon' => 'bi-kanban', 'url' => url('projects/index.php'), 'enabled' => true],
     ['key' => 'clients', 'label' => 'Clients', 'icon' => 'bi-building', 'url' => url('clients/index.php'), 'enabled' => true],
     ['key' => 'billing', 'label' => 'GST Billing', 'icon' => 'bi-receipt', 'url' => url('billing/index.php'), 'enabled' => true],
+    ['key' => 'quotations', 'label' => 'Quotations', 'icon' => 'bi-file-earmark-text', 'url' => url('quotations/index.php'), 'enabled' => true],
     ['key' => 'accounts', 'label' => 'Accounts', 'icon' => 'bi-cash-coin', 'url' => url('accounts/index.php'), 'enabled' => true],
     ['key' => 'employees', 'label' => 'Employees', 'icon' => 'bi-people', 'url' => url('employees/index.php'), 'enabled' => true],
     ['key' => 'attendance', 'label' => 'Attendance', 'icon' => 'bi-calendar-check', 'url' => url('hr/attendance.php'), 'enabled' => true],

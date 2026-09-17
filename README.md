@@ -350,3 +350,69 @@ navigation, and database were otherwise left untouched.
   (`notifications/index.php`) and a new dismissible popup shown once
   per login session on `dashboard.php`.
 
+## Final Billing Payment Details + Quotations module
+
+Two focused additions on top of the existing billing/lead/client
+architecture — no redesign of any existing page, UI, database table,
+or working feature.
+
+- **Payment Details on every final bill.** `database/migration_038_company_bank_details.sql`
+  adds bank account columns directly to the existing `company_branding`
+  singleton row (same table as the logo/seal/signature/social links),
+  and `database/migration_039_company_payment_qrs.sql` adds a new
+  `company_payment_qrs` table since the company can configure any
+  number of QR codes, each under its own payment-method label. Both
+  are managed from the existing Admin > Company Branding page
+  (`admin/company-branding.php`) via two new cards — no new admin
+  screen. `includes/company_branding.php` gained
+  `company_bank_details()`, `list_company_payment_qrs()`,
+  `add_company_payment_qr()`/`remove_company_payment_qr()`, and
+  `company_has_payment_details()`, following the exact
+  upload/remove/fallback conventions already used for the logo/seal.
+  `billing/view.php` renders a new "Payment Details" section (QR
+  images + bank detail table) pulled live from these settings —
+  nothing is hardcoded per-invoice, nothing prints if nothing is
+  configured (no empty QR boxes), and the section is
+  `page-break-inside: avoid` so it never splits or overlaps the
+  totals/footer on print or PDF. QR images stream through a new
+  authenticated endpoint, `admin/company-payment-qr-download.php`
+  (mirrors the existing `admin/company-branding-download.php`
+  pattern), rather than being served directly from `uploads/`.
+- **Quotations module** (new — there was no quotation functionality
+  anywhere in the codebase before this). `database/migration_040_quotations.sql`
+  adds `quotations` and `quotation_number_sequences` tables.
+  `includes/quotations.php` is the business-logic file (numbering via
+  `next_quotation_number()`, GST totals via
+  `compute_quotation_totals()`, CRUD, filters/search), and
+  `quotations/index.php` / `form.php` / `view.php` are the list/edit/
+  print pages — structured the same way as `billing/index.php` /
+  `form.php` / `view.php`. A quotation is a "common reusable template"
+  in practice: company info, branding, and standard terms/payment-terms
+  text are pulled live from the same `includes/company_branding.php`
+  functions GST Billing already uses, while only the project-specific
+  fields (client, project name, website/project type, scope/features,
+  amount, dates, terms) are stored per quotation — editable at any time
+  after creation without ever changing its quotation number. Gated
+  admin-only in `includes/permissions.php`, identically to how GST
+  Billing is already gated, since quotations carry the same pricing
+  sensitivity.
+- **Optional "Create Quotation" prompt on Lead → Client conversion.**
+  Lead-to-client conversion itself is unchanged — it's still automatic
+  the moment a lead's status becomes "won"
+  (`convert_won_lead_to_client()` in `includes/leads.php`). `leads/view.php`
+  now shows a dismissible-by-ignoring banner on any won lead offering
+  "Create Quotation" (prefilling the already-converted client so
+  nothing is re-typed) or "View Client"/"View Latest Quotation" if one
+  already exists — never forced, and safe to revisit later since it
+  isn't a one-time interstitial.
+- Verified end-to-end against a real MySQL database and over real
+  HTTP requests (not just unit-style checks): migrations apply
+  cleanly from a fresh database through this version with zero errors;
+  a lead converts to a client and an optional quotation is created
+  from it with GST math matching the supplied sample exactly
+  (₹50,000 + 18% = ₹59,000); editing a quotation preserves its number
+  while recalculating totals; the Payment Details section renders the
+  actual configured QR and bank details on a real generated invoice;
+  and the QR upload/remove admin flow works through the real
+  multipart form.
+

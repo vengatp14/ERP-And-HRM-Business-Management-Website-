@@ -60,6 +60,11 @@ define('COMPANY_ADDRESS', env_get('COMPANY_ADDRESS', ''));
 define('COMPANY_MOBILE', env_get('COMPANY_MOBILE', ''));
 define('INVOICE_NUMBER_PREFIX', env_get('INVOICE_NUMBER_PREFIX', 'INV'));
 
+// Prefix for Quotation numbering (includes/quotations.php: next_quotation_number()).
+// Kept separate from INVOICE_NUMBER_PREFIX so a quotation number is
+// never mistaken for a formal GST invoice number.
+define('QUOTATION_NUMBER_PREFIX', env_get('QUOTATION_NUMBER_PREFIX', 'QUO'));
+
 // Prefix for the Monthly Payments / project income ledger's own receipt
 // numbering (see includes/project_payments.php: next_project_income_number()).
 // Kept separate from INVOICE_NUMBER_PREFIX so these informal collection

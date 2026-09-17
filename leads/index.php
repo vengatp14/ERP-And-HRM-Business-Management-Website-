@@ -160,7 +160,7 @@ require __DIR__ . '/../includes/navbar.php';
                                         <?php endif; ?>
                                         <?= e(date('d M Y, h:i A', strtotime($followUp))) ?>
                                     <?php else: ?>
-                                        —
+                                        <span class="text-muted">Not Scheduled</span>
                                     <?php endif; ?>
                                 </span>
                             </td>

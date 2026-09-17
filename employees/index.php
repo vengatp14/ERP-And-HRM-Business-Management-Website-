@@ -25,17 +25,6 @@ if ($isManager && $_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('employees/index.php');
     }
 
-    if ($action === 'set_today_status') {
-        // Reuses the existing attendance system (employee_attendance /
-        // mark_attendance(), see includes/hr.php and hr/attendance.php)
-        // — this is just a quick Present/Absent toggle for today from
-        // the Employee page itself, not a separate attendance system.
-        $status = ($_POST['today_status'] ?? '') === 'absent' ? 'absent' : 'present';
-        mark_attendance($targetId, date('Y-m-d'), $status);
-        flash_set('status', "Marked {$target['full_name']} as " . ucfirst($status) . ' for today.');
-        redirect('employees/index.php');
-    }
-
     if ($action === 'toggle_status') {
         $newStatus = $target['status'] === 'active' ? 'inactive' : 'active';
         db()->prepare('UPDATE users SET status = :status WHERE id = :id')
@@ -136,8 +125,8 @@ require __DIR__ . '/../includes/navbar.php';
                         <th>Department</th>
                         <th>Mobile</th>
                         <th>Email</th>
-                        <th title="Account status">Status</th>
-                        <th title="Today's attendance">Status</th>
+                        <th>Active</th>
+                        <th>Attendance</th>
                         <th>Quick Contact</th>
                         <?php if ($isManager): ?><th class="text-end">Action</th><?php endif; ?>
                     </tr>
@@ -159,25 +148,30 @@ require __DIR__ . '/../includes/navbar.php';
                             <td><?= e($emp['email']) ?></td>
                             <td><span class="badge <?= e(employee_status_badge_class($emp['status'])) ?>"><?= e(ucfirst($emp['status'])) ?></span></td>
                             <td>
-                                <?php $todayStatus = $todayStatusByUserId[(int) $emp['id']] ?? null; ?>
-                                <?php if ($isManager && !$isSelf): ?>
-                                    <form method="POST" action="<?= e(url('employees/index.php')) ?>" class="d-inline">
-                                        <?= csrf_field() ?>
-                                        <input type="hidden" name="action" value="set_today_status">
-                                        <input type="hidden" name="user_id" value="<?= e((string) $emp['id']) ?>">
-                                        <select name="today_status" class="form-select form-select-sm js-auto-submit" style="width:auto;">
-                                            <option value="present" <?= $todayStatus === 'present' || $todayStatus === null ? 'selected' : '' ?>>Present</option>
-                                            <option value="absent" <?= $todayStatus === 'absent' ? 'selected' : '' ?>>Absent</option>
-                                        </select>
-                                    </form>
+                                <?php
+                                    // Read-only — reflects the actual attendance record for today
+                                    // (employee's own punch-in/out, or a manager's entry from the
+                                    // Team Roster on hr/attendance.php). This table intentionally
+                                    // offers no way to set it directly; see includes/hr.php
+                                    // attendance_for_date() / hr/attendance.php for where
+                                    // attendance is actually recorded.
+                                    // Collapsed to the three values this column is allowed to show
+                                    // (Present / Absent / Not Marked) — half_day counts as Present,
+                                    // on_leave counts as Absent here; the full status (including Half
+                                    // Day / On Leave) is still visible on the Attendance page's roster.
+                                    $todayStatus = $todayStatusByUserId[(int) $emp['id']] ?? null;
+                                    $attendanceLabel = match ($todayStatus) {
+                                        'present', 'half_day' => 'Present',
+                                        'absent', 'on_leave' => 'Absent',
+                                        default => 'Not Marked',
+                                    };
+                                ?>
+                                <?php if ($attendanceLabel === 'Absent'): ?>
+                                    <span class="badge text-bg-danger">Absent</span>
+                                <?php elseif ($attendanceLabel === 'Present'): ?>
+                                    <span class="badge text-bg-success">Present</span>
                                 <?php else: ?>
-                                    <?php if ($todayStatus === 'absent'): ?>
-                                        <span class="badge text-bg-danger">Absent</span>
-                                    <?php elseif ($todayStatus !== null): ?>
-                                        <span class="badge text-bg-success"><?= e(ucfirst(str_replace('_', ' ', $todayStatus))) ?></span>
-                                    <?php else: ?>
-                                        <span class="badge text-bg-secondary">Not marked</span>
-                                    <?php endif; ?>
+                                    <span class="badge text-bg-secondary">Not Marked</span>
                                 <?php endif; ?>
                             </td>
                             <td>
@@ -254,9 +248,6 @@ document.addEventListener('change', function (e) {
     }
 });
 
-document.querySelectorAll('.js-auto-submit').forEach(function (select) {
-    select.addEventListener('change', function () { select.form.submit(); });
-});
 </script>
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>

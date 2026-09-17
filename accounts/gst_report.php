@@ -25,6 +25,18 @@ $allGstInvoices = gst_invoices_for_period($startDate, $endDate);
 $gstTotals = totals_for_invoice_group($gstInvoices);
 $nonGstTotals = totals_for_invoice_group($nonGstInvoices);
 
+// GST Bills / Non-GST Bills / Both filter — purely a display filter over
+// the already-split groups above (no extra query needed), so totals/
+// figures on the summary cards always reflect the full period regardless
+// of which records table is currently shown.
+$gstFilterOptions = ['both' => 'Both', 'gst' => 'GST Bills', 'non_gst' => 'Non-GST Bills'];
+$gstFilter = $_GET['gst_filter'] ?? 'both';
+if (!array_key_exists($gstFilter, $gstFilterOptions)) {
+    $gstFilter = 'both';
+}
+$showGstTable = $gstFilter !== 'non_gst';
+$showNonGstTable = $gstFilter !== 'gst';
+
 // Rows-per-page selector for the GST-entered invoice table below. The
 // full $gstInvoices list is kept as-is (used for totals and for the
 // print/PDF view, which must always show every invoice regardless of
@@ -66,6 +78,16 @@ require __DIR__ . '/../includes/navbar.php';
                     <option value="<?= e($fy) ?>" <?= $fy === $financialYear ? 'selected' : '' ?>>FY <?= e($fy) ?></option>
                 <?php endforeach; ?>
             </select>
+            <input type="hidden" name="gst_filter" value="<?= e($gstFilter) ?>">
+        </form>
+        <form method="GET" action="<?= e(url('accounts/gst_report.php')) ?>" class="d-flex align-items-center gap-2">
+            <label for="gstFilterSelect" class="form-label small mb-0">Show</label>
+            <select id="gstFilterSelect" name="gst_filter" class="form-select form-select-sm" onchange="this.form.submit()">
+                <?php foreach ($gstFilterOptions as $key => $label): ?>
+                    <option value="<?= e($key) ?>" <?= $gstFilter === $key ? 'selected' : '' ?>><?= e($label) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <input type="hidden" name="fy" value="<?= e($financialYear) ?>">
         </form>
         <button type="button" class="btn btn-primary btn-sm" id="printBtn"><i class="bi bi-printer"></i> Print / Save as PDF</button>
         <a href="<?= e(url('accounts/gst_report_export.php?fy=' . $financialYear . '&format=excel')) ?>" class="btn btn-outline-success btn-sm">
@@ -145,11 +167,15 @@ require __DIR__ . '/../includes/navbar.php';
 
             <hr class="mb-4">
 
+            <?php if ($showGstTable): ?>
             <div class="d-flex align-items-center gap-2 mb-2">
                 <h2 class="h6 mb-0">GST Entered Records</h2>
                 <span class="badge text-bg-success"><?= e((string) count($gstInvoices)) ?></span>
             </div>
             <p class="text-muted small">Invoices where GST was actually applied — the figures above are drawn only from these.</p>
+            <?php if (empty($gstInvoices)): ?>
+                <div class="text-center text-muted py-4 border rounded mb-4"><i class="bi bi-inbox fs-3 d-block mb-1"></i>No Data Available</div>
+            <?php else: ?>
 
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
                 <span class="text-muted small">Invoice-wise GST Breakdown</span>
@@ -245,14 +271,20 @@ require __DIR__ . '/../includes/navbar.php';
                     </tbody>
                 </table>
             </div>
+            <?php endif; ?>
+            <?php endif; // $showGstTable ?>
 
-            <hr class="mb-4">
+            <?php if ($showGstTable && $showNonGstTable): ?><hr class="mb-4"><?php endif; ?>
 
+            <?php if ($showNonGstTable): ?>
             <div class="d-flex align-items-center gap-2 mb-2">
                 <h2 class="h6 mb-0">Non-GST Records</h2>
                 <span class="badge text-bg-secondary"><?= e((string) count($nonGstInvoices)) ?></span>
             </div>
             <p class="text-muted small">Invoices where GST was not entered / not applicable. Shown separately so no zero-GST columns appear against these — they carry no GST liability.</p>
+            <?php if (empty($nonGstInvoices)): ?>
+                <div class="text-center text-muted py-4 border rounded mb-2"><i class="bi bi-inbox fs-3 d-block mb-1"></i>No Data Available</div>
+            <?php else: ?>
 
             <div class="table-responsive mb-2">
                 <table class="table table-striped table-sm mb-0">
@@ -287,6 +319,8 @@ require __DIR__ . '/../includes/navbar.php';
                     <?php endif; ?>
                 </table>
             </div>
+            <?php endif; ?>
+            <?php endif; // $showNonGstTable ?>
 
             <hr class="my-4">
 

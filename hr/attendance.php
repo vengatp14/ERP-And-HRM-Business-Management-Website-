@@ -15,7 +15,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'punch_in') {
-        if (!punch_in($currentUserId)) {
+        // Latitude/longitude come from the browser's own Geolocation API,
+        // captured into these hidden fields just before submit — see the
+        // script at the bottom of this page. Never a fixed/office
+        // coordinate: if the browser couldn't get a location, these
+        // simply arrive empty and the punch is still recorded (existing
+        // behavior), just without a location attached.
+        $lat = ($_POST['latitude'] ?? '') !== '' ? (float) $_POST['latitude'] : null;
+        $lng = ($_POST['longitude'] ?? '') !== '' ? (float) $_POST['longitude'] : null;
+        if (!punch_in($currentUserId, $lat, $lng)) {
             flash_set('error', "You've already punched in today.");
         } else {
             flash_set('status', 'Punched in at ' . date('H:i') . '.');
@@ -24,7 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'punch_out') {
-        punch_out($currentUserId);
+        $lat = ($_POST['latitude'] ?? '') !== '' ? (float) $_POST['latitude'] : null;
+        $lng = ($_POST['longitude'] ?? '') !== '' ? (float) $_POST['longitude'] : null;
+        punch_out($currentUserId, $lat, $lng);
         flash_set('status', 'Punched out at ' . date('H:i') . '.');
         redirect('hr/attendance.php');
     }
@@ -69,9 +79,11 @@ require __DIR__ . '/../includes/navbar.php';
     <div class="card-header bg-white"><h2 class="h6 mb-0">My Attendance Today</h2></div>
     <div class="card-body d-flex flex-wrap align-items-center gap-3">
         <?php if ($today === false): ?>
-            <form method="POST" action="<?= e(url('hr/attendance.php')) ?>">
+            <form method="POST" action="<?= e(url('hr/attendance.php')) ?>" class="js-punch-form">
                 <?= csrf_field() ?>
                 <input type="hidden" name="action" value="punch_in">
+                <input type="hidden" name="latitude" class="js-punch-lat" value="">
+                <input type="hidden" name="longitude" class="js-punch-lng" value="">
                 <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-box-arrow-in-right"></i> Punch In</button>
             </form>
             <span class="text-muted small">You haven't punched in today.</span>
@@ -80,15 +92,60 @@ require __DIR__ . '/../includes/navbar.php';
             <?php if ($today['check_out_time']): ?>
                 <span class="text-muted small">Checked out <?= e($today['check_out_time']) ?></span>
             <?php else: ?>
-                <form method="POST" action="<?= e(url('hr/attendance.php')) ?>">
+                <form method="POST" action="<?= e(url('hr/attendance.php')) ?>" class="js-punch-form">
                     <?= csrf_field() ?>
                     <input type="hidden" name="action" value="punch_out">
+                    <input type="hidden" name="latitude" class="js-punch-lat" value="">
+                    <input type="hidden" name="longitude" class="js-punch-lng" value="">
                     <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-box-arrow-right"></i> Punch Out</button>
                 </form>
             <?php endif; ?>
         <?php endif; ?>
+        <span class="text-muted small d-none" id="punchLocationHint"><i class="bi bi-geo-alt"></i> Getting your location…</span>
     </div>
 </div>
+
+<script nonce="<?= e(csp_nonce()) ?>">
+// Capture the device's actual coordinates (browser Geolocation API) at
+// the moment of punching in/out — never a fixed/office location — and
+// drop them into the hidden fields just before the form submits. If
+// permission is denied or a location can't be obtained, the fields
+// stay empty and the punch still goes through exactly as before
+// (see hr/attendance.php's punch_in/punch_out handling above).
+document.querySelectorAll('.js-punch-form').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+        var latField = form.querySelector('.js-punch-lat');
+        var lngField = form.querySelector('.js-punch-lng');
+        if (form.dataset.locationResolved === '1' || !('geolocation' in navigator)) {
+            return; // already have a location (or geolocation unsupported) — submit as-is
+        }
+        e.preventDefault();
+        var hint = document.getElementById('punchLocationHint');
+        if (hint) hint.classList.remove('d-none');
+        var submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+        var finish = function () {
+            if (hint) hint.classList.add('d-none');
+            if (submitBtn) submitBtn.disabled = false;
+            form.dataset.locationResolved = '1';
+            form.submit();
+        };
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                latField.value = position.coords.latitude;
+                lngField.value = position.coords.longitude;
+                finish();
+            },
+            function () {
+                // Denied or unavailable — proceed without a location,
+                // same as the existing attendance validation behavior.
+                finish();
+            },
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        );
+    });
+});
+</script>
 
 <div class="card mb-4">
     <div class="card-header bg-white"><h2 class="h6 mb-0">Monthly Attendance %</h2></div>
@@ -151,7 +208,7 @@ require __DIR__ . '/../includes/navbar.php';
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-sm table-striped align-middle mb-0">
-                <thead><tr><th>Employee</th><th>Status</th><th>Check In</th><th>Check Out</th><th class="text-end">Update</th></tr></thead>
+                <thead><tr><th>Employee</th><th>Status</th><th>Check In</th><th>Check Out</th><th>Location</th><th class="text-end">Update</th></tr></thead>
                 <tbody>
                     <?php foreach ($roster as $row): ?>
                         <tr>
@@ -159,6 +216,23 @@ require __DIR__ . '/../includes/navbar.php';
                             <td><span class="badge <?= e(attendance_status_badge_class($row['status'])) ?>"><?= e(ucwords(str_replace('_', ' ', $row['status'] ?? 'not marked'))) ?></span></td>
                             <td><?= e($row['check_in_time'] ?? '—') ?></td>
                             <td><?= e($row['check_out_time'] ?? '—') ?></td>
+                            <td>
+                                <?php
+                                    // Whichever punch actually has coordinates — the check-in point
+                                    // if present, otherwise the check-out point. Always the real
+                                    // device coordinates captured by the Geolocation API at that
+                                    // punch (see punch_in()/punch_out() in includes/hr.php) — never
+                                    // a generic/fixed location.
+                                    $lat = $row['check_in_latitude'] ?? $row['check_out_latitude'] ?? null;
+                                    $lng = $row['check_in_longitude'] ?? $row['check_out_longitude'] ?? null;
+                                ?>
+                                <?php if ($lat !== null && $lng !== null): ?>
+                                    <div class="small text-muted mb-1">Lat: <?= e(number_format((float) $lat, 6)) ?><br>Lng: <?= e(number_format((float) $lng, 6)) ?></div>
+                                    <a href="<?= e(attendance_location_maps_url((float) $lat, (float) $lng)) ?>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary py-0 px-2"><i class="bi bi-geo-alt"></i> View Location</a>
+                                <?php else: ?>
+                                    <span class="text-muted small">Not Captured</span>
+                                <?php endif; ?>
+                            </td>
                             <td class="text-end">
                                 <form method="POST" action="<?= e(url('hr/attendance.php')) ?>" class="d-flex gap-1 justify-content-end">
                                     <?= csrf_field() ?>

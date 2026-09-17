@@ -172,6 +172,13 @@ html, body {
     right: 0;
     width: 100%;
     z-index: 1030;
+    /* Bootstrap's .navbar is flex-wrap:wrap by default, which is exactly
+       why the right-hand icon group (theme toggle/notifications/user
+       menu) was dropping to a second row on narrow phones once it and
+       the hamburger+brand on the left no longer both fit on one line.
+       The nav must stay a single row — see the brand/gap sizing below,
+       which reclaims the space so nowrap doesn't cause overflow instead. */
+    flex-wrap: nowrap;
 }
 
 /* On large screens the sidebar is fixed and permanent (see the
@@ -276,6 +283,41 @@ html, body {
         height: 40px;
         font-size: 1.1rem;
     }
+
+    /* Topbar brand ("CRM ERP") was inheriting Bootstrap's .h1 size
+       (~2.5rem) — plenty of room on desktop, but on a narrow phone it
+       alone was wide enough to push the right-hand icon group (theme
+       toggle / notifications / user menu) past the edge, forcing the
+       whole group to wrap onto a second row (see .app-topbar's
+       flex-wrap:nowrap above, which needs this to actually fit).
+       A compact app-bar-style title reclaims that space. */
+    .app-topbar .navbar-brand.h1 {
+        font-size: 1.15rem;
+        margin-right: 0.25rem;
+    }
+
+    /* Bootstrap's gap-3 (1rem) between the theme toggle / notification
+       bell / user menu is comfortable on desktop but, combined above,
+       was the other half of the space this group needed to fit
+       without wrapping. Tighter — but still well within a comfortable
+       touch-target gap — on narrow phones only. */
+    .app-topbar > .ms-auto.gap-3 {
+        gap: 0.5rem !important;
+    }
+
+    .app-menu-toggle {
+        padding: 0.25rem 0.375rem;
+    }
+
+    /* Safety net on top of the sizing fixes above: even if some
+       combination of content (a long unread-count badge, a translated
+       label, a different font metric) ever needed a few more pixels
+       than expected, this guarantees it clips at the topbar's own edge
+       — invisible, not wrapped to a second row and not bleeding out
+       into page-level horizontal scroll. */
+    .app-topbar {
+        overflow-x: hidden;
+    }
 }
 
 /* Table wrapper never causes horizontal page scroll — DataTables'
@@ -349,6 +391,22 @@ table.dataTable {
         left: 8px;
         width: auto;
         margin: 0;
+    }
+
+    /* Card headers throughout the app pair a title with one or more
+       action buttons/filters via `d-flex justify-content-between`.
+       Most already opt into `flex-wrap` in their own markup, but not
+       all do — on a narrow phone an unwrapped one pushes its button(s)
+       half off the card/screen edge instead of dropping them to a
+       second line within the header. Applying it here once, for every
+       card header, is the common-level fix instead of hunting down and
+       editing each page's class list individually. Desktop is
+       unaffected (scoped to <991.98px) and content that already fits
+       on one line simply keeps doing so — flex-wrap only engages when
+       something doesn't fit. */
+    .card-header.d-flex {
+        flex-wrap: wrap;
+        row-gap: 0.5rem;
     }
 }
 
@@ -647,4 +705,251 @@ tr.lead-row-missed td {
     .calendar-weekday { font-size: 0.55rem; }
     .calendar-date { font-size: 0.8rem; }
     .calendar-chip { font-size: 0.5rem; padding: 1px 3px; }
+}
+
+/* ---------------------------------------------------------------
+   Light/Dark theme toggle button (top navbar)
+   --------------------------------------------------------------- */
+.theme-toggle-btn {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-top: 4px;
+}
+
+/* =================================================================
+   DARK THEME
+   Bootstrap 5.3's color modes already re-theme every stock component
+   (cards, tables, forms, dropdowns, modals, alerts, buttons, nav,
+   pagination, etc.) automatically once data-bs-theme="dark" is set on
+   <html> — see includes/header.php (applied pre-paint) and
+   includes/navbar.php / assets/js/app.js (the toggle). Everything
+   below only covers this app's OWN hand-rolled classes/colors that
+   Bootstrap has no way to know about, so nothing is left half-styled.
+   Light Theme (the default, no attribute / data-bs-theme="light")
+   is intentionally untouched by every rule in this block.
+   ================================================================= */
+[data-bs-theme="dark"] {
+    --app-sidebar-bg: #0b0f19;
+}
+
+[data-bs-theme="dark"] body {
+    background-color: #0f1520;
+}
+
+/* Topbar — hardcoded white background/border in the base rule above. */
+[data-bs-theme="dark"] .app-topbar {
+    background-color: #151c2c;
+    border-bottom: 1px solid #2a3348;
+}
+
+[data-bs-theme="dark"] .theme-toggle-btn,
+[data-bs-theme="dark"] .notif-bell-btn,
+[data-bs-theme="dark"] .app-topbar .btn-light {
+    background-color: #1d2536;
+    border-color: #2a3348;
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .theme-toggle-btn:hover,
+[data-bs-theme="dark"] .notif-bell-btn:hover,
+[data-bs-theme="dark"] .app-topbar .btn-light:hover {
+    background-color: #262f45;
+    border-color: #333e58;
+    color: #fff;
+}
+
+/* Sidebar is already dark in both themes by design — just keep its
+   "active" nav item legible against the darker dark-theme sidebar bg. */
+[data-bs-theme="dark"] .app-nav .nav-link.active {
+    background-color: #2563eb;
+    color: #fff;
+}
+
+/* Notification dropdown — the unread-row highlight uses Bootstrap's
+   static (non-theme-aware) .bg-light utility, which stays pale gray
+   regardless of color mode and looks like a mistake on a dark panel. */
+[data-bs-theme="dark"] .notif-dropdown .dropdown-item.bg-light {
+    background-color: rgba(37, 99, 235, 0.15) !important;
+}
+
+[data-bs-theme="dark"] .notif-dropdown .border-bottom {
+    border-color: var(--bs-border-color) !important;
+}
+
+/* Stat/KPI cards (dashboard, accounts) keep their colored icon chips
+   readable — Bootstrap's *-subtle/*-emphasis pairs already adapt per
+   theme automatically, this just keeps the card shadow subtle instead
+   of invisible-on-black. */
+[data-bs-theme="dark"] .stat-card {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Status toggle switch (Employees table) — light gray track reads as
+   a rendering glitch against a dark row. */
+[data-bs-theme="dark"] .status-toggle .form-check-input {
+    background-color: #3a4358;
+    border-color: #3a4358;
+}
+
+[data-bs-theme="dark"] .status-toggle .form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+/* Follow-up overdue/due-today text — brighten the red slightly for
+   better contrast against a dark row background. */
+[data-bs-theme="dark"] .followup-overdue,
+[data-bs-theme="dark"] .followup-today {
+    color: #ff6b7a;
+}
+
+/* Missed-lead row tint — the light-theme pink card is unreadable
+   (dark-on-light text set against a suddenly-light row) once the rest
+   of the table has gone dark; use a translucent red tint instead so
+   it still reads as "missed" without breaking the dark surface. */
+[data-bs-theme="dark"] tr.lead-row-missed {
+    background-color: rgba(220, 53, 69, 0.18) !important;
+}
+
+[data-bs-theme="dark"] tr.lead-row-missed:hover {
+    background-color: rgba(220, 53, 69, 0.28) !important;
+}
+
+[data-bs-theme="dark"] tr.lead-row-missed td {
+    color: #ff8a95;
+}
+
+/* Calendar widget — every cell/weekday label was hardcoded for a
+   light background. */
+[data-bs-theme="dark"] .calendar-cell {
+    background-color: #1a2233;
+    border-color: #2a3348;
+}
+
+[data-bs-theme="dark"] .calendar-cell-blank {
+    background-color: transparent;
+}
+
+[data-bs-theme="dark"] .calendar-weekday,
+[data-bs-theme="dark"] .calendar-chip-more {
+    color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .calendar-date {
+    color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .calendar-cell-today {
+    border-color: #60a5fa;
+    box-shadow: inset 0 0 0 1px #60a5fa;
+}
+
+/* Mobile bottom nav — hardcoded white bar/border. */
+[data-bs-theme="dark"] .mobile-bottom-nav {
+    background: #151c2c;
+    border-top: 1px solid #2a3348;
+}
+
+[data-bs-theme="dark"] .mobile-bottom-nav a {
+    color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .mobile-bottom-nav a.active {
+    color: #60a5fa;
+}
+
+/* Contextual "-light"/"-dark" table & badge variants are intentionally
+   fixed-color by design in Bootstrap (e.g. a light table header should
+   look the same regardless of page theme) — text stays dark-on-light
+   there by design, so contrast is never broken. The empty/placeholder
+   states below use the theme's own muted color token instead of a
+   hardcoded gray so they never wash out on a dark background. */
+[data-bs-theme="dark"] .text-muted {
+    color: #94a3b8 !important;
+}
+
+/* Chart.js canvases draw their own colors in JS (see accounts/index.php
+   and reports/index.php), not CSS — both read the current data-bs-theme
+   and re-render on the crmerp:theme-changed event dispatched by the
+   toggle in assets/js/app.js, so grid lines/legend/tick text stay
+   readable in Dark Theme instead of rendering as invisible dark-gray-
+   on-dark-gray.
+   --------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------
+   ROOT CAUSE of nearly every "still shows Light Theme" report across
+   the app: every card header in this codebase (Dashboard, Accounts —
+   Financial Overview/Ledger, Attendance — every section, Leave
+   Requests, Meetings, Reports, Company Branding, Users, the shared
+   calendar widget used by Leads/Clients/Projects/Billing/Meetings,
+   and more) uses Bootstrap's `.bg-white` utility for a flush white
+   header. `.bg-white` is intentionally NOT theme-aware in Bootstrap —
+   it's tied to the static `--bs-white`, not the current color mode —
+   so every one of those headers stayed hard-coded white no matter
+   what the rest of the card around it did. Fixing it once here (per
+   requirement: "fix it at the common/theme level rather than
+   page-specific overrides") is what actually resolves the Dashboard/
+   Accounts/Attendance/Leave Requests/Meetings/Reports/Company
+   Branding/Users/calendar reports together, without touching any of
+   those pages' own markup.
+   `:not(img)` carves out the couple of places `bg-white` is used
+   on-purpose as a light "mat" behind an uploaded logo/signature
+   preview (admin/company-branding.php, clients/form.php) — those stay
+   white in both themes deliberately, the same way a photo would keep
+   its own white border regardless of the page around it. */
+[data-bs-theme="dark"] .bg-white:not(img) {
+    background-color: var(--bs-tertiary-bg) !important;
+}
+
+/* Table header/footer rows styled with Bootstrap's `.table-light`
+   variant (Attendance's Team Roster & My Last 30 Days, Salaries, the
+   on-screen GST Summary, etc.) are, like `.bg-white` above, a fixed
+   light color by design in Bootstrap — not theme-aware — so they sat
+   as a bright patch inside an otherwise-dark table. */
+[data-bs-theme="dark"] .table-light {
+    --bs-table-bg: var(--bs-tertiary-bg);
+    --bs-table-color: var(--bs-body-color);
+    --bs-table-border-color: var(--bs-border-color);
+}
+
+/* Exception: printable "paper" documents (the GST Report, an
+   invoice/bill, a payslip) are deliberately kept looking like the
+   physical/PDF page they'll produce, regardless of the app's on-screen
+   theme — see #printArea on accounts/gst_report.php, billing/view.php,
+   hr/payslip.php. That's an intentional design choice (so what you see
+   is what prints), not a leftover Light Theme leak, so it's excluded
+   from both overrides above. */
+[data-bs-theme="dark"] #printArea .bg-white:not(img),
+[data-bs-theme="dark"] #printArea .table-light {
+    background-color: #fff !important;
+    --bs-table-bg: #fff;
+    --bs-table-color: #212529;
+    --bs-table-border-color: #dee2e6;
+}
+
+/* Native date/time/month pickers (Leave Requests' "Apply for Leave",
+   Meetings' "Schedule Meeting", Attendance/Reports date filters, etc.)
+   are rendered by the browser itself, not by this app's CSS — without
+   this hint the calendar/clock icon stays browser-default dark and
+   turns nearly invisible against the dark input background Bootstrap
+   already applies to .form-control here. color-scheme tells the
+   browser to draw that icon (and any native picker popup) to match. */
+[data-bs-theme="dark"] input[type="date"],
+[data-bs-theme="dark"] input[type="time"],
+[data-bs-theme="dark"] input[type="month"],
+[data-bs-theme="dark"] input[type="week"],
+[data-bs-theme="dark"] input[type="datetime-local"] {
+    color-scheme: dark;
+}
+
+/* Login notifications popup (Dashboard, shown right after sign-in) —
+   the same static .bg-light unread-row highlight already fixed for the
+   navbar's notification dropdown (see .notif-dropdown above), reused
+   here for its list-group version. */
+[data-bs-theme="dark"] #loginNotificationsModal .list-group-item.bg-light {
+    background-color: rgba(37, 99, 235, 0.15) !important;
 }

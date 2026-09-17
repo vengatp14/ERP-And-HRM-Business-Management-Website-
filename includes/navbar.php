@@ -18,6 +18,10 @@ $user = current_user();
         <span class="navbar-brand mb-0 h1 d-lg-none">CRM<span class="text-primary">ERP</span></span>
 
         <div class="ms-auto d-flex align-items-center gap-3">
+            <button type="button" class="btn btn-light theme-toggle-btn" id="themeToggleBtn"
+                    title="Switch to Dark Theme" aria-label="Switch to Dark Theme">
+                <i class="bi bi-moon-stars"></i>
+            </button>
             <?php $unreadCount = get_unread_notification_count((int) $user['id']); $recentNotifications = get_notifications((int) $user['id'], 8); ?>
             <div class="dropdown">
                 <button class="btn btn-light position-relative notif-bell-btn" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">

@@ -214,6 +214,40 @@ require __DIR__ . '/../includes/navbar.php';
     <?php endif; ?>
 </div>
 
+<?php if ($lead['status'] === 'won'): ?>
+    <?php
+    // Optional Lead -> Convert to Client -> Create Quotation prompt
+    // (req #6). Conversion itself already happened automatically in
+    // update_lead() above the moment status became 'won' — this is
+    // purely an offer, never forced, and safe to show every time the
+    // lead is revisited (not just right after the transition).
+    $wonClient = find_client_by_source_lead($leadId);
+    $wonClientQuotations = $wonClient !== false ? get_quotations_for_client((int) $wonClient['id']) : [];
+    ?>
+    <?php if ($wonClient !== false && user_can(current_user(), 'quotations', 'add')): ?>
+        <div class="alert alert-success d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+                <i class="bi bi-check-circle"></i>
+                Converted to client <strong><?= e($wonClient['company_name']) ?></strong>.
+                <?php if (!empty($wonClientQuotations)): ?>
+                    <?= count($wonClientQuotations) ?> quotation<?= count($wonClientQuotations) === 1 ? '' : 's' ?> on file for this client.
+                <?php else: ?>
+                    No quotation created yet for this client — optional.
+                <?php endif; ?>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="<?= e(url('clients/view.php?id=' . $wonClient['id'])) ?>" class="btn btn-outline-secondary btn-sm">View Client</a>
+                <?php if (!empty($wonClientQuotations)): ?>
+                    <a href="<?= e(url('quotations/view.php?id=' . $wonClientQuotations[0]['id'])) ?>" class="btn btn-outline-success btn-sm">View Latest Quotation</a>
+                <?php endif; ?>
+                <a href="<?= e(url('quotations/form.php?client_id=' . $wonClient['id'] . '&lead_id=' . $leadId)) ?>" class="btn btn-success btn-sm">
+                    <i class="bi bi-file-earmark-plus"></i> Create Quotation
+                </a>
+            </div>
+        </div>
+    <?php endif; ?>
+<?php endif; ?>
+
 <div class="row g-4">
     <div class="col-12 col-lg-4">
         <div class="card mb-4">
@@ -221,13 +255,13 @@ require __DIR__ . '/../includes/navbar.php';
             <div class="card-body small">
                 <dl class="row mb-0">
                     <dt class="col-5">Mobile</dt><dd class="col-7"><?= e($lead['mobile']) ?></dd>
-                    <dt class="col-5">WhatsApp</dt><dd class="col-7"><?= e($lead['whatsapp'] ?? '—') ?></dd>
-                    <dt class="col-5">Email</dt><dd class="col-7"><?= e($lead['email'] ?? '—') ?></dd>
-                    <dt class="col-5">Address</dt><dd class="col-7"><?= nl2br(e($lead['address'] ?? '—')) ?></dd>
-                    <dt class="col-5">GST No.</dt><dd class="col-7"><?= e($lead['gst_number'] ?? '—') ?></dd>
-                    <dt class="col-5">PAN No.</dt><dd class="col-7"><?= e($lead['pan_number'] ?? '—') ?></dd>
-                    <dt class="col-5">Budget</dt><dd class="col-7"><?= $lead['budget'] !== null ? '₹' . e(number_format((float) $lead['budget'], 2)) : '—' ?></dd>
-                    <dt class="col-5">Project Type</dt><dd class="col-7"><?= e($lead['project_type'] ?? '—') ?></dd>
+                    <dt class="col-5">WhatsApp</dt><dd class="col-7"><?= !empty($lead['whatsapp']) ? e($lead['whatsapp']) : '<span class="text-muted">Not Provided</span>' ?></dd>
+                    <dt class="col-5">Email</dt><dd class="col-7"><?= !empty($lead['email']) ? e($lead['email']) : '<span class="text-muted">Not Provided</span>' ?></dd>
+                    <dt class="col-5">Address</dt><dd class="col-7"><?= !empty($lead['address']) ? nl2br(e($lead['address'])) : '<span class="text-muted">Not Mentioned</span>' ?></dd>
+                    <dt class="col-5">GST No.</dt><dd class="col-7"><?= !empty($lead['gst_number']) ? e($lead['gst_number']) : '<span class="badge text-bg-secondary">Non-GST</span>' ?></dd>
+                    <dt class="col-5">PAN No.</dt><dd class="col-7"><?= !empty($lead['pan_number']) ? e($lead['pan_number']) : '<span class="text-muted">Not Provided</span>' ?></dd>
+                    <dt class="col-5">Budget</dt><dd class="col-7"><?= $lead['budget'] !== null ? '₹' . e(number_format((float) $lead['budget'], 2)) : '<span class="text-muted">Not Specified</span>' ?></dd>
+                    <dt class="col-5">Project Type</dt><dd class="col-7"><?= !empty($lead['project_type']) ? e($lead['project_type']) : '<span class="text-muted">Not Specified</span>' ?></dd>
                     <dt class="col-5">Source</dt><dd class="col-7"><?= e(ucwords(str_replace('_', ' ', $lead['source']))) ?></dd>
                     <dt class="col-5">Missed Attempts</dt><dd class="col-7"><?= e((string) $lead['missed_attempts']) ?></dd>
                 </dl>

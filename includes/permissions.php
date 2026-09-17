@@ -92,6 +92,12 @@ function user_can(array $user, string $module, string $action = 'view'): bool
     if ($module === 'billing') {
         return false;
     }
+    // Quotations carry the same pricing/financial sensitivity as GST
+    // Billing, so they're gated the same way — admin-only, never
+    // grantable to a plain employee.
+    if ($module === 'quotations') {
+        return false;
+    }
     if (!isset(MODULE_PERMISSIONS[$module]['actions'][$action])) {
         return false;
     }
