@@ -217,10 +217,15 @@ html, body {
    touch so it stays clear of the top edge, at every screen size. */
 .notif-bell-btn {
     margin-top: 4px;
+    overflow: visible;
 }
 
 .notif-bell-badge {
-    top: 4px !important;
+    top: 2px !important;
+    left: auto !important;
+    right: 2px;
+    transform: translate(25%, -25%) !important;
+    z-index: 2;
 }
 
 .app-content {
