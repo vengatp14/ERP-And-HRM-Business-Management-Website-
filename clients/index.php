@@ -120,9 +120,9 @@ require __DIR__ . '/../includes/navbar.php';
                             <td><?= e($client['company_name']) ?></td>
                             <td><?= e($client['contact_name']) ?></td>
                             <td><?= e($client['mobile']) ?></td>
-                            <td><?= e($client['gstin'] ?? '—') ?></td>
-                            <td><?= e($client['city'] ?? '—') ?></td>
-                            <td><?= e($client['assigned_to_name'] ?? '—') ?></td>
+                            <td><?= field_or($client['gstin'] ?? null) ?></td>
+                            <td><?= field_or($client['city'] ?? null) ?></td>
+                            <td><?= field_or($client['assigned_to_name'] ?? null, 'Unassigned') ?></td>
                             <td><span class="badge <?= e(client_status_badge_class($client['status'])) ?>"><?= e(ucfirst($client['status'])) ?></span></td>
                             <td>
                                 <?php if (!empty($client['next_contact_at'])): ?>

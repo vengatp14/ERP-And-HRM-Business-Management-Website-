@@ -142,9 +142,9 @@ require __DIR__ . '/../includes/navbar.php';
                                 <?= e($emp['full_name']) ?>
                                 <?php if ($isSelf): ?><span class="badge text-bg-light border text-muted">You</span><?php endif; ?>
                             </td>
-                            <td><?= e($emp['designation'] ?? '—') ?></td>
-                            <td><?= e($emp['department'] ?? '—') ?></td>
-                            <td><?= e($emp['mobile'] ?? '—') ?></td>
+                            <td><?= field_or($emp['designation'] ?? null, 'Not set') ?></td>
+                            <td><?= field_or($emp['department'] ?? null, 'Not set') ?></td>
+                            <td><?= field_or($emp['mobile'] ?? null) ?></td>
                             <td><?= e($emp['email']) ?></td>
                             <td><span class="badge <?= e(employee_status_badge_class($emp['status'])) ?>"><?= e(ucfirst($emp['status'])) ?></span></td>
                             <td>

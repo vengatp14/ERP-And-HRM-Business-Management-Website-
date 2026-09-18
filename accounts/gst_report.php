@@ -212,9 +212,9 @@ require __DIR__ . '/../includes/navbar.php';
                         <?php foreach ($pagedGstInvoices as $inv): ?>
                             <tr>
                                 <td><?= e($inv['invoice_number']) ?></td>
-                                <td><?= e($inv['client_gstin'] ?? '—') ?></td>
+                                <td><?= field_or($inv['client_gstin'] ?? null) ?></td>
                                 <td><?= e(date('d-M-Y', strtotime($inv['invoice_date']))) ?></td>
-                                <td><?= e($inv['client_name'] ?? '—') ?></td>
+                                <td><?= field_or($inv['client_name'] ?? null) ?></td>
                                 <td class="text-end">₹<?= e(number_format((float) $inv['taxable_amount'], 2)) ?></td>
                                 <td class="text-end">₹<?= e(number_format((float) $inv['cgst_amount'], 2)) ?></td>
                                 <td class="text-end">₹<?= e(number_format((float) $inv['sgst_amount'], 2)) ?></td>
@@ -258,9 +258,9 @@ require __DIR__ . '/../includes/navbar.php';
                         <?php foreach ($gstInvoices as $inv): ?>
                             <tr>
                                 <td><?= e($inv['invoice_number']) ?></td>
-                                <td><?= e($inv['client_gstin'] ?? '—') ?></td>
+                                <td><?= field_or($inv['client_gstin'] ?? null) ?></td>
                                 <td><?= e(date('d-M-Y', strtotime($inv['invoice_date']))) ?></td>
-                                <td><?= e($inv['client_name'] ?? '—') ?></td>
+                                <td><?= field_or($inv['client_name'] ?? null) ?></td>
                                 <td class="text-end">₹<?= e(number_format((float) $inv['taxable_amount'], 2)) ?></td>
                                 <td class="text-end">₹<?= e(number_format((float) $inv['cgst_amount'], 2)) ?></td>
                                 <td class="text-end">₹<?= e(number_format((float) $inv['sgst_amount'], 2)) ?></td>
@@ -304,7 +304,7 @@ require __DIR__ . '/../includes/navbar.php';
                             <tr>
                                 <td><?= e($inv['invoice_number']) ?></td>
                                 <td><?= e(date('d-M-Y', strtotime($inv['invoice_date']))) ?></td>
-                                <td><?= e($inv['client_name'] ?? '—') ?></td>
+                                <td><?= field_or($inv['client_name'] ?? null) ?></td>
                                 <td class="text-end">₹<?= e(number_format((float) $inv['total_amount'], 2)) ?></td>
                             </tr>
                         <?php endforeach; ?>

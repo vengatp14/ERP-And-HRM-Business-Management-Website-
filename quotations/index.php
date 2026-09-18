@@ -110,7 +110,7 @@ require __DIR__ . '/../includes/navbar.php';
                     <?php foreach ($quotations as $quotation): ?>
                         <tr>
                             <td><a href="<?= e(url('quotations/view.php?id=' . $quotation['id'])) ?>" class="fw-semibold text-decoration-none"><?= e($quotation['quotation_number']) ?></a></td>
-                            <td><?= e($quotation['client_name'] ?? '—') ?></td>
+                            <td><?= field_or($quotation['client_name'] ?? null) ?></td>
                             <td><?= e($quotation['project_title']) ?></td>
                             <td><?= e(quotation_website_type_label($quotation)) ?></td>
                             <td><?= e($quotation['quotation_date']) ?></td>

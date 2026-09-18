@@ -73,13 +73,13 @@ require __DIR__ . '/../includes/navbar.php';
                     <?php foreach ($plans as $plan): ?>
                         <tr>
                             <td><a href="<?= e(url('projects/view.php?id=' . $plan['project_id'])) ?>"><?= e($plan['project_title']) ?></a></td>
-                            <td><?= e($plan['client_name'] ?? '—') ?></td>
+                            <td><?= field_or($plan['client_name'] ?? null) ?></td>
                             <td><?= e(project_payment_type_label($plan['payment_type'])) ?></td>
                             <td>
                                 <?php if ($plan['payment_type'] === 'monthly'): ?>
                                     Every <?= e((string) $plan['day_of_month']) ?><?= e(ordinal_suffix((int) $plan['day_of_month'])) ?>
                                 <?php else: ?>
-                                    <?= e($plan['due_date'] ?? '—') ?>
+                                    <?= field_or($plan['due_date'] ?? null, 'Not set') ?>
                                 <?php endif; ?>
                             </td>
                             <td class="text-end">₹<?= e(number_format((float) $plan['amount'], 2)) ?></td>

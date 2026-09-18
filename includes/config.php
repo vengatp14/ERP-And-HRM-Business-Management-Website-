@@ -58,6 +58,13 @@ define('COMPANY_GSTIN', env_get('COMPANY_GSTIN', ''));
 define('COMPANY_STATE', env_get('COMPANY_STATE', ''));
 define('COMPANY_ADDRESS', env_get('COMPANY_ADDRESS', ''));
 define('COMPANY_MOBILE', env_get('COMPANY_MOBILE', ''));
+// Email/website shown on the printed Quotation letterhead (quotations/view.php).
+// No Company Branding admin field for these yet, so — unlike NAME/ADDRESS/
+// GSTIN/MOBILE above — there is no per-install DB override; only the .env
+// value (or this bundled default, matching the company's current quotation
+// letterhead) is used.
+define('COMPANY_EMAIL', env_get('COMPANY_EMAIL', 'info@softwaredevelopmentandgraphicdesign.tech'));
+define('COMPANY_WEBSITE', env_get('COMPANY_WEBSITE', 'www.softwaredevelopmentandgraphicdesign.tech'));
 define('INVOICE_NUMBER_PREFIX', env_get('INVOICE_NUMBER_PREFIX', 'INV'));
 
 // Prefix for Quotation numbering (includes/quotations.php: next_quotation_number()).

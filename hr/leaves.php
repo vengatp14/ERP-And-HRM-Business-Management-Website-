@@ -151,7 +151,7 @@ require __DIR__ . '/../includes/navbar.php';
                             <td><?= e($leave['leave_type']) ?></td>
                             <td><?= e($leave['start_date']) ?> to <?= e($leave['end_date']) ?></td>
                             <td><span class="badge <?= e(leave_status_badge_class($leave['status'])) ?>"><?= e(ucfirst($leave['status'])) ?></span></td>
-                            <td><?= e($leave['approver_name'] ?? '—') ?></td>
+                            <td><?= field_or($leave['approver_name'] ?? null, 'Not reviewed yet') ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -179,9 +179,9 @@ require __DIR__ . '/../includes/navbar.php';
                             <td><?= e($leave['full_name']) ?></td>
                             <td><?= e($leave['leave_type']) ?></td>
                             <td><?= e($leave['start_date']) ?> to <?= e($leave['end_date']) ?></td>
-                            <td><?= e($leave['reason'] ?? '—') ?></td>
+                            <td><?= field_or($leave['reason'] ?? null, 'Not provided') ?></td>
                             <td><span class="badge <?= e(leave_status_badge_class($leave['status'])) ?>"><?= e(ucfirst($leave['status'])) ?></span></td>
-                            <td><?= e($leave['approver_name'] ?? '—') ?></td>
+                            <td><?= field_or($leave['approver_name'] ?? null, 'Not reviewed yet') ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

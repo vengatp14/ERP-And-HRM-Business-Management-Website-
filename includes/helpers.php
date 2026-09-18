@@ -13,6 +13,27 @@ function e(?string $value): string
     return htmlspecialchars($value ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+/**
+ * Display a value, or a readable placeholder label (e.g. "Not entered",
+ * "Not assigned") instead of a bare "—" when the value is empty. Used
+ * everywhere a table cell or detail row would otherwise fall back to a
+ * dash — a dash reads as broken/missing data, a labeled placeholder
+ * reads as "this was never filled in".
+ *
+ * $muted true (default) wraps the placeholder in a small muted/italic
+ * span for screen views; pass false on printed documents (quotations,
+ * invoices) where that styling wouldn't print well.
+ */
+function field_or(?string $value, string $label = 'Not entered', bool $muted = true): string
+{
+    if ($value === null || trim($value) === '') {
+        return $muted
+            ? '<span class="text-muted fst-italic">' . e($label) . '</span>'
+            : e($label);
+    }
+    return e($value);
+}
+
 function sanitize_string(?string $value): string
 {
     return trim(strip_tags($value ?? ''));

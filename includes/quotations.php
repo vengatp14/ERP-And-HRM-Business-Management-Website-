@@ -22,18 +22,82 @@ const QUOTATION_WEBSITE_TYPES = [
     'other' => 'Other',
 ];
 
-/** Default "Project Scope / Features / Implementation" starting point per website type — examples only, fully editable per quotation (req: do not hardcode irrelevant features into every quotation). */
+/** Default "Project Scope / Features / Implementation" starting point per website type — prefilled into the form for a new quotation, and also used by quotations/view.php as the printed fallback whenever a quotation's own scope_description is empty (see requirement: the full quotation content should always show, only the project-specific values differ). */
 const QUOTATION_DEFAULT_SCOPE_BY_TYPE = [
-    'static' => "- Number of pages: \n- Responsive design (mobile, tablet, desktop)\n- Contact form\n- Basic SEO setup\n- Hosting/deployment assistance",
-    'dynamic' => "- Admin panel\n- Database-driven content\n- Dynamic content management\n- User management (if applicable)\n- Responsive design",
-    'ecommerce' => "- Product listing and management\n- Categories, variants, pricing, discounts\n- Cart and checkout\n- Payment gateway integration\n- Order management\n- Customer registration and login",
-    'crm_application' => "- Relevant modules (as agreed)\n- User roles and permissions\n- Reports and dashboard\n- Other project-specific functionality",
+    'static' => "01. PAGES & DESIGN\n- Number of pages: \n- Responsive design (mobile, tablet, desktop)\n- Contact form\n\n02. SEO & DEPLOYMENT\n- Basic SEO setup\n- Hosting/deployment assistance",
+    'dynamic' => "01. ADMIN & CONTENT MANAGEMENT\n- Admin panel\n- Database-driven content\n- Dynamic content management\n\n02. USER MANAGEMENT\n- User management (if applicable)\n\n03. RESPONSIVE DESIGN\n- Responsive design (mobile, tablet, desktop)",
+    'ecommerce' => "01. PREMIUM UI & RESPONSIVE DESIGN\nModern and premium storefront UI optimized for:\n- Mobile\n- Tablet\n- Desktop\n\n02. PRODUCT & INVENTORY MANAGEMENT\n- Product listing and management\n- Categories\n- Product variants\n- Pricing\n- Discounts\n- Stock management\n\n03. PAYMENT GATEWAY SETUP\n- Online payment gateway configuration\n- Payment processing flow\n- Payment and order confirmation flow\n\n04. COURIER & SHIPPING SETUP\n- Shipping configuration\n- Fulfillment workflow\n- Order tracking setup\n\n05. ORDER MANAGEMENT\n- Order dashboard\n- Order status management\n- Payment status\n- Fulfillment status\n- Order tracking\n\n06. CUSTOMER / USER MANAGEMENT\n- Customer registration\n- Login\n- Customer profiles\n- Order history\n\n07. BUSINESS WORKFLOW\n- Pricing and discount management\n- Business records\n- Basic quotation / invoice workflow where supported",
+    'crm_application' => "01. CORE MODULES\n- Relevant modules (as agreed)\n\n02. USER ROLES & PERMISSIONS\n- User roles and permissions\n\n03. REPORTS & DASHBOARD\n- Reports and dashboard\n\n04. OTHER FUNCTIONALITY\n- Other project-specific functionality",
     'other' => '',
 ];
+
 
 const QUOTATION_DEFAULT_TERMS = "Payment gateway fees, third-party subscription/license charges, and domain/hosting renewal charges are excluded unless specifically mentioned in writing.\nThe client must provide the required content, images, and any credentials/access needed for the project.\nThe project will be developed according to the agreed Scope of Work above.\nNew features, additional functionality, or requirements outside the approved Scope of Work will be quoted and charged separately.\nAny additional cost will be communicated and approved before the additional work begins.\nThis quotation is valid until the date mentioned above.";
 
 const QUOTATION_DEFAULT_GST_RATE = 18.00;
+
+/**
+ * Fixed clauses that appear, worded the same way, on every quotation the
+ * company sends out (mirrors the printed letterhead format in
+ * quotations/view.php — see PROJECT OVERVIEW / DEVELOPMENT APPROACH /
+ * DEVELOPMENT SUPPORT & FUNCTIONALITY WARRANTY / PAYMENT PROCESS below).
+ * Unlike scope_description/payment_terms/terms_conditions these are not
+ * stored per quotation — there is nothing project-specific about them —
+ * so they live here as constants rather than editable columns.
+ */
+const QUOTATION_DEVELOPMENT_APPROACH_TEXT = "The website will be developed according to the agreed Scope of Work mentioned in this quotation.\nAny functionality specifically included within the approved Scope of Work will be implemented as agreed.\nThe development team will work on the project according to the requirements finalized before development begins.";
+
+const QUOTATION_WARRANTY_TEXT = "PRE-DEVELOPED FUNCTIONALITIES\nAll pre-developed functionalities included within the agreed Scope of Work will be covered for a period of one (1) year from the date of final deployment.\nIf an error or technical issue occurs in any of the agreed pre-developed functionalities during this support period, we will review and fix the issue for that specific functionality at no additional development charge, provided that the issue is related to the original implemented functionality.\n\nIMPORTANT\nThis support applies only to the originally developed and agreed functionalities included in the project Scope of Work.\nThe support does not include new features, new functionality, major changes, redesigns, third-party changes, or enhancements requested after the original development.";
+
+/** Type-specific "the completed website will undergo" testing checklist — ecommerce gets the payment/order/shipping flow checks called out in the company's e-commerce quotation format; other project types get a shorter, generic list. */
+function quotation_testing_checklist(array $quotation): array
+{
+    if ($quotation['website_type'] === 'ecommerce') {
+        return ['Responsive testing', 'Payment-flow testing', 'Order-flow testing', 'Shipping-flow testing', 'Final deployment'];
+    }
+    if ($quotation['website_type'] === 'crm_application') {
+        return ['Functionality testing', 'User role & permission testing', 'Data/reports testing', 'Final deployment'];
+    }
+    return ['Responsive testing', 'Functionality testing', 'Final deployment'];
+}
+
+/** "PAYMENT TERMS & DEPLOYMENT PROCESS" narrative — same wording as the company's printed quotation, kept percentage-neutral since the actual advance/balance split (shown just above this, and under Project Investment) comes from the quotation's own payment_terms field rather than being hardcoded here. */
+const QUOTATION_PAYMENT_PROCESS_TEXT = "The initial advance payment is required before project commencement.\nDevelopment & Testing: After receiving the advance payment and required project materials, development will begin according to the agreed Scope of Work. The completed website will be tested before final deployment.\nDomain Connection & Final Payment: After completion of development and testing, the website will be prepared for domain connection and final deployment. The remaining payment must be settled before the website is made live on the client's domain.\nFinal Deployment: Once the remaining payment is received, the website will be connected to the domain and the final live deployment will be completed.";
+
+/** "PROJECT OVERVIEW" paragraph — same wording as the company's printed quotation, with the project type filled in from existing quotation data. */
+function quotation_default_overview(array $quotation): string
+{
+    return sprintf(
+        "We will design and develop a professional, responsive, and user-friendly %s based on the agreed requirements and Scope of Work.\nThe complete development will be carried out according to the features and functionalities mentioned in this quotation.\nOur team will handle the website development, configuration, testing, and final deployment to ensure the agreed requirements are properly implemented.",
+        quotation_website_type_label($quotation)
+    );
+}
+
+/**
+ * "PROJECT DURATION" — the company's printed format always states this
+ * (e.g. "30 Days / 1 Month"). There's no dedicated duration field on the
+ * quotation, so when quotation_date/valid_until are both set it's derived
+ * from that existing pair; otherwise it falls back to the company's usual
+ * default turnaround so this line — like the rest of the printed
+ * quotation — is never simply blank.
+ */
+function quotation_duration_label(array $quotation): string
+{
+    if (!empty($quotation['valid_until']) && !empty($quotation['quotation_date'])) {
+        $start = new DateTime($quotation['quotation_date']);
+        $end = new DateTime($quotation['valid_until']);
+        $days = (int) $start->diff($end)->days;
+        if ($days > 0) {
+            $label = $days . ' Day' . ($days === 1 ? '' : 's');
+            if ($days % 30 === 0) {
+                $months = intdiv($days, 30);
+                $label .= ' / ' . $months . ' Month' . ($months === 1 ? '' : 's');
+            }
+            return $label;
+        }
+    }
+    return '30 Days / 1 Month';
+}
 
 /** All valid website_type values, for form/validation use. */
 function quotation_website_type_options(): array

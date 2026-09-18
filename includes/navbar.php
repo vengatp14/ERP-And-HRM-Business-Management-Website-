@@ -53,7 +53,7 @@ $user = current_user();
                 </div>
             </div>
             <div class="dropdown">
-                <button class="btn btn-light d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn btn-light d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
                     <span class="app-avatar"><?= e(mb_strtoupper(mb_substr($user['full_name'] ?? 'U', 0, 1))) ?></span>
                     <span class="d-none d-sm-inline"><?= e($user['full_name'] ?? 'User') ?></span>
                     <i class="bi bi-chevron-down small"></i>

@@ -118,7 +118,7 @@ function profile_row(string $label, ?string $value, string $icon = 'bi-dash'): s
             <?php endif; ?>
             <div>
                 <div class="fs-4 fw-semibold"><?= e($employee['full_name']) ?></div>
-                <div class="text-muted"><?= e($employee['designation'] ?? '—') ?><?= $employee['department'] ? ' · ' . e($employee['department']) : '' ?></div>
+                <div class="text-muted"><?= field_or($employee['designation'] ?? null, 'Not set', false) ?><?= $employee['department'] ? ' · ' . e($employee['department']) : '' ?></div>
                 <span class="badge <?= e(employee_status_badge_class($employee['status'])) ?> mt-1"><?= e(ucfirst($employee['status'])) ?></span>
             </div>
         </div>
@@ -186,7 +186,7 @@ function profile_row(string $label, ?string $value, string $icon = 'bi-dash'): s
                 <div class="col-6 col-md-4 col-lg-2">
                     <div class="border rounded p-2 text-center h-100">
                         <div class="small text-muted"><?= e(date('M Y', strtotime($hist['month'] . '-01'))) ?></div>
-                        <div><?= star_display($hist['rounded'] > 0 ? $hist['rounded'] : null, '—') ?></div>
+                        <div><?= star_display($hist['rounded'] > 0 ? $hist['rounded'] : null) ?></div>
                         <div class="small text-muted"><?= (int) $hist['rated_count'] ?>/<?= (int) $hist['total_count'] ?> rated</div>
                     </div>
                 </div>

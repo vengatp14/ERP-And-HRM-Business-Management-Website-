@@ -70,10 +70,10 @@ require __DIR__ . '/../includes/navbar.php';
                             <div class="board-card-title">
                                 <a href="<?= e(url('projects/view.php?id=' . $project['id'])) ?>" draggable="false"><?= e($project['title']) ?></a>
                             </div>
-                            <div class="board-card-client text-muted small"><?= e($project['client_name'] ?? '—') ?></div>
+                            <div class="board-card-client text-muted small"><?= field_or($project['client_name'] ?? null, 'Not entered', false) ?></div>
                             <div class="board-card-dates text-muted small mt-1">
-                                <div><i class="bi bi-play-circle"></i> Start: <?= e($project['start_date'] ?? '—') ?></div>
-                                <div><i class="bi bi-flag"></i> Deadline: <?= e($project['deadline'] ?? '—') ?></div>
+                                <div><i class="bi bi-play-circle"></i> Start: <?= field_or($project['start_date'] ?? null, 'Not set', false) ?></div>
+                                <div><i class="bi bi-flag"></i> Deadline: <?= field_or($project['deadline'] ?? null, 'Not set', false) ?></div>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mt-2">
                                 <span class="badge <?= e(lead_priority_badge_class($project['priority'])) ?>"><?= e(ucfirst($project['priority'])) ?></span>

@@ -126,6 +126,24 @@ function company_mobile(): string
     return $mobile !== '' ? $mobile : COMPANY_MOBILE;
 }
 
+/**
+ * The company's email to display on the printed Quotation letterhead
+ * (quotations/view.php). No Company Branding admin field/table column
+ * exists for this yet, so this simply reflects COMPANY_EMAIL
+ * (includes/config.php) rather than following the branding-table-first
+ * fallback pattern used by company_name()/company_address() above.
+ */
+function company_email(): string
+{
+    return COMPANY_EMAIL;
+}
+
+/** The company's website to display on the printed Quotation letterhead — same reasoning as company_email() above. */
+function company_website(): string
+{
+    return COMPANY_WEBSITE;
+}
+
 /** Saves the company name/address/GSTIN/mobile entered on the Company Branding page. */
 function update_company_name_address(string $name, string $address, string $gstin = '', string $mobile = ''): bool
 {

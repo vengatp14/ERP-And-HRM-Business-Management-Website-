@@ -400,15 +400,15 @@ require __DIR__ . '/../includes/navbar.php';
                                         <span class="text-capitalize"><?= e(str_replace('_', ' ', $activity['type'])) ?></span>
                                         <div class="text-muted small"><?= $activity['user_name'] ? e($activity['user_name']) : 'System' ?></div>
                                     </td>
-                                    <td><?= $activity['content'] ? nl2br(e($activity['content'])) : '<span class="text-muted">—</span>' ?></td>
+                                    <td><?= $activity['content'] ? nl2br(e($activity['content'])) : '<span class="text-muted fst-italic">Not provided</span>' ?></td>
                                     <td>
                                         <?php if ($activity['client_response']): ?>
                                             <span class="badge text-bg-light border"><?= e(str_replace('_', ' ', $activity['client_response'])) ?></span>
                                         <?php else: ?>
-                                            <span class="text-muted">—</span>
+                                            <span class="text-muted fst-italic">No response yet</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td><?= $activity['next_follow_up_at'] ? e($activity['next_follow_up_at']) : '<span class="text-muted">—</span>' ?></td>
+                                    <td><?= $activity['next_follow_up_at'] ? e($activity['next_follow_up_at']) : '<span class="text-muted fst-italic">Not scheduled</span>' ?></td>
                                     <td>
                                         <div><?= e($activity['created_at']) ?></div>
                                         <?php if ($activity['updated_at']): ?>

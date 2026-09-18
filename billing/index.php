@@ -195,9 +195,9 @@ require __DIR__ . '/../includes/navbar.php';
                     <?php foreach ($invoices as $invoice): ?>
                         <tr>
                             <td><a href="<?= e(url('billing/view.php?id=' . $invoice['id'])) ?>" class="fw-semibold text-decoration-none"><?= e($invoice['invoice_number']) ?></a></td>
-                            <td><?= e($invoice['client_name'] ?? '—') ?></td>
+                            <td><?= field_or($invoice['client_name'] ?? null) ?></td>
                             <td><?= e($invoice['invoice_date']) ?></td>
-                            <td><?= e($invoice['due_date'] ?? '—') ?></td>
+                            <td><?= field_or($invoice['due_date'] ?? null, 'Not set') ?></td>
                             <td class="text-end">₹<?= e(number_format((float) $invoice['total_amount'], 2)) ?></td>
                             <td class="text-end">₹<?= e(number_format((float) $invoice['amount_paid'], 2)) ?></td>
                             <td>

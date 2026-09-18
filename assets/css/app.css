@@ -317,11 +317,10 @@ html, body {
     /* Safety net on top of the sizing fixes above: even if some
        combination of content (a long unread-count badge, a translated
        label, a different font metric) ever needed a few more pixels
-       than expected, this guarantees it clips at the topbar's own edge
-       — invisible, not wrapped to a second row and not bleeding out
-       into page-level horizontal scroll. */
+       than expected, the menu itself is constrained below. Keep the
+       topbar overflow visible so fixed dropdowns remain usable. */
     .app-topbar {
-        overflow-x: hidden;
+        overflow: visible;
     }
 }
 
@@ -396,6 +395,18 @@ table.dataTable {
         left: 8px;
         width: auto;
         margin: 0;
+    }
+
+    /* The profile menu is also static on phones so Bootstrap does not
+       position it relative to the narrow navbar. Pin it to the viewport
+       and keep the full Logout action visible below the topbar. */
+    .user-menu-dropdown.dropdown-menu-end {
+        position: fixed;
+        top: var(--app-topbar-height);
+        right: 8px;
+        left: auto;
+        margin: 0;
+        max-width: calc(100vw - 16px);
     }
 
     /* Card headers throughout the app pair a title with one or more

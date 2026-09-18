@@ -165,7 +165,7 @@ require __DIR__ . '/../includes/navbar.php';
                                 <td class="text-end">₹<?= e(number_format((float) $rec['basic_pay'], 2)) ?></td>
                                 <td class="text-end">₹<?= e(number_format((float) $rec['net_pay'], 2)) ?></td>
                                 <td><span class="badge <?= $rec['status'] === 'paid' ? 'text-bg-success' : 'text-bg-warning' ?>"><?= e(ucfirst($rec['status'])) ?></span></td>
-                                <td><?= e($rec['paid_on'] ?? '—') ?></td>
+                                <td><?= field_or($rec['paid_on'] ?? null, 'Not paid yet') ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

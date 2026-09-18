@@ -214,8 +214,8 @@ document.querySelectorAll('.js-punch-form').forEach(function (form) {
                         <tr>
                             <td><?= e($row['full_name']) ?></td>
                             <td><span class="badge <?= e(attendance_status_badge_class($row['status'])) ?>"><?= e(ucwords(str_replace('_', ' ', $row['status'] ?? 'not marked'))) ?></span></td>
-                            <td><?= e($row['check_in_time'] ?? '—') ?></td>
-                            <td><?= e($row['check_out_time'] ?? '—') ?></td>
+                            <td><?= field_or($row['check_in_time'] ?? null, 'Not checked in') ?></td>
+                            <td><?= field_or($row['check_out_time'] ?? null, 'Not checked out') ?></td>
                             <td>
                                 <?php
                                     // Whichever punch actually has coordinates — the check-in point
@@ -270,8 +270,8 @@ document.querySelectorAll('.js-punch-form').forEach(function (form) {
                         <tr>
                             <td><?= e($row['attendance_date']) ?></td>
                             <td><span class="badge <?= e(attendance_status_badge_class($row['status'])) ?>"><?= e(ucwords(str_replace('_', ' ', $row['status']))) ?></span></td>
-                            <td><?= e($row['check_in_time'] ?? '—') ?></td>
-                            <td><?= e($row['check_out_time'] ?? '—') ?></td>
+                            <td><?= field_or($row['check_in_time'] ?? null, 'Not checked in') ?></td>
+                            <td><?= field_or($row['check_out_time'] ?? null, 'Not checked out') ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

@@ -69,8 +69,8 @@ require __DIR__ . '/../includes/navbar.php';
                         <tr>
                             <td>Every <?= e((string) $rule['day_of_month']) ?><?= e(ordinal_suffix((int) $rule['day_of_month'])) ?></td>
                             <td><?= e($rule['category']) ?></td>
-                            <td><?= e($rule['description'] ?? '—') ?></td>
-                            <td><?= e($rule['vendor'] ?? '—') ?></td>
+                            <td><?= field_or($rule['description'] ?? null, 'Not provided') ?></td>
+                            <td><?= field_or($rule['vendor'] ?? null, 'Not specified') ?></td>
                             <td class="text-end">₹<?= e(number_format((float) $rule['amount'], 2)) ?></td>
                             <td>
                                 <?php if ((int) $rule['is_active'] === 1): ?>

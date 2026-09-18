@@ -210,16 +210,16 @@ require __DIR__ . '/../includes/navbar.php';
             <div class="card-body small">
                 <dl class="row mb-0">
                     <dt class="col-5">Mobile</dt><dd class="col-7"><?= e($client['mobile']) ?></dd>
-                    <dt class="col-5">WhatsApp</dt><dd class="col-7"><?= e($client['whatsapp'] ?? '—') ?></dd>
-                    <dt class="col-5">Email</dt><dd class="col-7"><?= e($client['email'] ?? '—') ?></dd>
-                    <dt class="col-5">GSTIN</dt><dd class="col-7"><?= e($client['gstin'] ?? '—') ?></dd>
-                    <dt class="col-5">PAN No.</dt><dd class="col-7"><?= e($client['pan_number'] ?? '—') ?></dd>
-                    <dt class="col-5">Billing Address</dt><dd class="col-7"><?= nl2br(e($client['billing_address'] ?? '—')) ?></dd>
-                    <dt class="col-5">City</dt><dd class="col-7"><?= e($client['city'] ?? '—') ?></dd>
-                    <dt class="col-5">State</dt><dd class="col-7"><?= e($client['state'] ?? '—') ?></dd>
-                    <dt class="col-5">Pincode</dt><dd class="col-7"><?= e($client['pincode'] ?? '—') ?></dd>
-                    <dt class="col-5">Added By</dt><dd class="col-7"><?= e($client['created_by_name'] ?? '—') ?></dd>
-                    <dt class="col-5">Assigned To</dt><dd class="col-7"><?= e($client['assigned_to_name'] ?? '—') ?></dd>
+                    <dt class="col-5">WhatsApp</dt><dd class="col-7"><?= field_or($client['whatsapp'] ?? null) ?></dd>
+                    <dt class="col-5">Email</dt><dd class="col-7"><?= field_or($client['email'] ?? null) ?></dd>
+                    <dt class="col-5">GSTIN</dt><dd class="col-7"><?= field_or($client['gstin'] ?? null) ?></dd>
+                    <dt class="col-5">PAN No.</dt><dd class="col-7"><?= field_or($client['pan_number'] ?? null) ?></dd>
+                    <dt class="col-5">Billing Address</dt><dd class="col-7"><?= $client['billing_address'] ? nl2br(e($client['billing_address'])) : field_or(null) ?></dd>
+                    <dt class="col-5">City</dt><dd class="col-7"><?= field_or($client['city'] ?? null) ?></dd>
+                    <dt class="col-5">State</dt><dd class="col-7"><?= field_or($client['state'] ?? null) ?></dd>
+                    <dt class="col-5">Pincode</dt><dd class="col-7"><?= field_or($client['pincode'] ?? null) ?></dd>
+                    <dt class="col-5">Added By</dt><dd class="col-7"><?= field_or($client['created_by_name'] ?? null, 'Not recorded') ?></dd>
+                    <dt class="col-5">Assigned To</dt><dd class="col-7"><?= field_or($client['assigned_to_name'] ?? null, 'Unassigned') ?></dd>
                     <dt class="col-5">Next Contact</dt>
                     <dd class="col-7">
                         <?php if (!empty($client['next_contact_at'])): ?>

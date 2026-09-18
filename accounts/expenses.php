@@ -84,9 +84,9 @@ require __DIR__ . '/../includes/navbar.php';
                         <tr>
                             <td><?= e($expense['expense_date']) ?></td>
                             <td><?= e($expense['category']) ?></td>
-                            <td><?= e($expense['description'] ?? '—') ?></td>
-                            <td><?= e($expense['vendor'] ?? '—') ?></td>
-                            <td><?= e($expense['project_title'] ?? '—') ?></td>
+                            <td><?= field_or($expense['description'] ?? null, 'Not provided') ?></td>
+                            <td><?= field_or($expense['vendor'] ?? null, 'Not specified') ?></td>
+                            <td><?= field_or($expense['project_title'] ?? null, 'Not linked') ?></td>
                             <td class="text-end">₹<?= e(number_format((float) $expense['amount'], 2)) ?></td>
                             <td class="text-end">
                                 <?php if (user_can(current_user(), 'accounts', 'edit')): ?>

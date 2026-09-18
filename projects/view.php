@@ -339,15 +339,15 @@ require __DIR__ . '/../includes/navbar.php';
             <div class="card-header bg-white"><h2 class="h6 mb-0">Details</h2></div>
             <div class="card-body small">
                 <dl class="row mb-0">
-                    <dt class="col-5">Type</dt><dd class="col-7"><?= e($project['project_type'] ?? '—') ?></dd>
+                    <dt class="col-5">Type</dt><dd class="col-7"><?= field_or($project['project_type'] ?? null, 'Not specified') ?></dd>
                     <?php if (is_admin_role(current_user())): ?>
-                        <dt class="col-5">Budget</dt><dd class="col-7"><?= $project['budget'] !== null ? '₹' . e(number_format((float) $project['budget'], 2)) : '—' ?></dd>
+                        <dt class="col-5">Budget</dt><dd class="col-7"><?= $project['budget'] !== null ? '₹' . e(number_format((float) $project['budget'], 2)) : '<span class="text-muted fst-italic">Not set</span>' ?></dd>
                         <dt class="col-5">Paid</dt><dd class="col-7 text-success fw-semibold">₹<?= e(number_format($projectInvoice !== false ? (float) $projectInvoice['amount_paid'] : 0, 2)) ?></dd>
                     <?php endif; ?>
                     <dt class="col-5">Manager</dt><dd class="col-7"><?= e($project['manager_name'] ?? 'Unassigned') ?></dd>
-                    <dt class="col-5">Start Date</dt><dd class="col-7"><?= e($project['start_date'] ?? '—') ?></dd>
-                    <dt class="col-5">Deadline</dt><dd class="col-7"><?= e($project['deadline'] ?? '—') ?></dd>
-                    <dt class="col-5">Completed</dt><dd class="col-7"><?= e($project['completed_at'] ?? '—') ?></dd>
+                    <dt class="col-5">Start Date</dt><dd class="col-7"><?= field_or($project['start_date'] ?? null, 'Not set') ?></dd>
+                    <dt class="col-5">Deadline</dt><dd class="col-7"><?= field_or($project['deadline'] ?? null, 'Not set') ?></dd>
+                    <dt class="col-5">Completed</dt><dd class="col-7"><?= field_or($project['completed_at'] ?? null, 'Not completed yet') ?></dd>
                 </dl>
                 <?php if (!empty($project['description'])): ?>
                     <hr><div class="text-muted"><?= nl2br(e($project['description'])) ?></div>
@@ -409,7 +409,7 @@ require __DIR__ . '/../includes/navbar.php';
                         <dt class="col-5">Due</dt><dd class="col-7">
                             <?= $paymentPlan['payment_type'] === 'monthly'
                                 ? 'Every ' . e((string) $paymentPlan['day_of_month']) . e(ordinal_suffix((int) $paymentPlan['day_of_month']))
-                                : e($paymentPlan['due_date'] ?? '—') ?>
+                                : field_or($paymentPlan['due_date'] ?? null, 'Not set') ?>
                         </dd>
                         <dt class="col-5">Status</dt><dd class="col-7"><span class="badge <?= (int) $paymentPlan['is_active'] === 1 ? 'text-bg-success' : 'text-bg-secondary' ?>"><?= (int) $paymentPlan['is_active'] === 1 ? 'Active' : 'Inactive' ?></span></dd>
                         <dt class="col-5">Total Received</dt><dd class="col-7 fw-semibold">₹<?= e(number_format($projectInvoice !== false ? (float) $projectInvoice['amount_paid'] : 0, 2)) ?></dd>

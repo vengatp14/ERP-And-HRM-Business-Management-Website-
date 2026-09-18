@@ -163,7 +163,7 @@ require __DIR__ . '/../includes/navbar.php';
             <?= e($invoice['invoice_number']) ?>
             <span class="badge <?= e(invoice_status_badge_class($invoice['status'])) ?>"><?= e(ucwords(str_replace('_', ' ', $invoice['status']))) ?></span>
         </h1>
-        <p class="text-muted mb-0"><?= e($invoice['client_name'] ?? '—') ?></p>
+        <p class="text-muted mb-0"><?= field_or($invoice['client_name'] ?? null) ?></p>
     </div>
     <div class="d-flex flex-wrap gap-2">
         <button type="button" class="btn btn-outline-secondary btn-sm" id="printBtn"><i class="bi bi-printer"></i> Print</button>
@@ -226,7 +226,7 @@ require __DIR__ . '/../includes/navbar.php';
                     <img src="<?= e($clientLogoUrl) ?>" alt="<?= e($invoice['client_name'] ?? '') ?> logo" class="mb-2" style="max-height:56px;max-width:200px;object-fit:contain;">
                 <?php endif; ?>
                 <div class="text-muted small">Billed To</div>
-                <strong><?= e($invoice['client_name'] ?? '—') ?></strong><br>
+                <strong><?= field_or($invoice['client_name'] ?? null, 'Not entered', false) ?></strong><br>
                 <?= nl2br(e($invoice['client_address'] ?? '')) ?><br>
                 <?php if ($invoice['client_gstin']): ?>GSTIN: <?= e($invoice['client_gstin']) ?><br><?php endif; ?>
                 <?= e($invoice['client_email'] ?? '') ?> <?= e($invoice['client_mobile'] ?? '') ?>
@@ -235,7 +235,7 @@ require __DIR__ . '/../includes/navbar.php';
                 <?php if ($invoice['project_title']): ?><div class="text-muted small">Project</div><div><?= e($invoice['project_title']) ?></div><?php endif; ?>
                 <div class="text-muted small mt-2">Place of Supply</div>
                 <div>
-                    <?= e($invoice['place_of_supply'] ?? '—') ?>
+                    <?= field_or($invoice['place_of_supply'] ?? null, 'Not specified', false) ?>
                     (<?= invoice_is_gst($invoice) ? 'GST Applicable' : 'Non-GST Invoice' ?>)
                 </div>
             </div>
@@ -408,8 +408,8 @@ require __DIR__ . '/../includes/navbar.php';
                             <td><?= e($payment['payment_date']) ?></td>
                             <td>₹<?= e(number_format((float) $payment['amount'], 2)) ?></td>
                             <td><?= e(ucwords(str_replace('_', ' ', $payment['payment_method']))) ?></td>
-                            <td><?= e($payment['reference'] ?? '—') ?></td>
-                            <td><?= e($payment['created_by_name'] ?? '—') ?></td>
+                            <td><?= field_or($payment['reference'] ?? null, 'Not provided') ?></td>
+                            <td><?= field_or($payment['created_by_name'] ?? null, 'Not recorded') ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

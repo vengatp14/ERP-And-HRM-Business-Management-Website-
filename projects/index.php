@@ -112,11 +112,11 @@ require __DIR__ . '/../includes/navbar.php';
                     <?php foreach ($projects as $project): ?>
                         <tr>
                             <td><?= e($project['title']) ?></td>
-                            <td><?= e($project['client_name'] ?? '—') ?></td>
+                            <td><?= field_or($project['client_name'] ?? null) ?></td>
                             <td><?= e($project['manager_name'] ?? 'Unassigned') ?></td>
                             <td><span class="badge <?= e(lead_priority_badge_class($project['priority'])) ?>"><?= e(ucfirst($project['priority'])) ?></span></td>
                             <td><span class="badge <?= e(project_status_badge_class($project['status'])) ?>"><?= e(ucwords(str_replace('_', ' ', $project['status']))) ?></span></td>
-                            <td><?= e($project['deadline'] ?? '—') ?></td>
+                            <td><?= field_or($project['deadline'] ?? null, 'Not set') ?></td>
                             <td class="text-end">
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-outline-secondary" type="button"

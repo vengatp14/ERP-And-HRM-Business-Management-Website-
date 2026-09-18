@@ -232,7 +232,7 @@ require __DIR__ . '/../includes/navbar.php';
                 <div class="col-6 col-md-3">
                     <label class="form-label">Blood Group</label>
                     <select name="blood_group" class="form-select">
-                        <option value="">—</option>
+                        <option value="">Not selected</option>
                         <?php foreach (['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as $bg): ?>
                             <option value="<?= e($bg) ?>" <?= ($employee['blood_group'] ?? '') === $bg ? 'selected' : '' ?>><?= e($bg) ?></option>
                         <?php endforeach; ?>
